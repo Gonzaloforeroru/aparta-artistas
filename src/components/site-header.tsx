@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
+import { ThemeToggle } from "@/components/theme-toggle"
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -15,7 +16,7 @@ import {
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 flex h-(--header-height) shrink-0 items-center gap-2 border-b bg-background px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-1 items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator
           orientation="vertical"
@@ -35,6 +36,7 @@ export function SiteHeader() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
+      <ThemeToggle />
     </header>
   )
 }

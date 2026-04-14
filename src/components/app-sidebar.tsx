@@ -16,7 +16,7 @@ import {
   SidebarGroupLabel,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { Music2Icon, LayoutDashboardIcon, ListIcon, CheckCircleIcon, BarChart3Icon, ExternalLinkIcon, ClipboardEditIcon } from "lucide-react"
+import { Music2Icon, LayoutDashboardIcon, ListIcon, CheckCircleIcon, BarChart3Icon, ExternalLinkIcon, UploadIcon, MailIcon } from "lucide-react"
 import Link from "next/link"
 
 const adminNav = [
@@ -32,19 +32,33 @@ const adminNav = [
     icon: ListIcon,
   },
   {
-    title: "Métricas",
-    url: "/admin/metricas",
-    icon: BarChart3Icon,
+    title: "Importar CSV",
+    url: "/admin/importar",
+    icon: UploadIcon,
+  },
+  {
+    title: "Invitaciones",
+    url: "/admin/invitaciones",
+    icon: MailIcon,
   },
   {
     title: "Aprobaciones",
     url: "/admin/aprobaciones",
     icon: CheckCircleIcon,
-    badge: "3",
+  },
+  {
+    title: "Métricas",
+    url: "/admin/metricas",
+    icon: BarChart3Icon,
   },
 ]
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user?: { name: string; email: string; avatar: string }
+  pendingCount?: number
+}
+
+export function AppSidebar({ user, pendingCount = 0, ...props }: AppSidebarProps) {
   const pathname = usePathname()
 
   return (
@@ -82,8 +96,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <span>{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
-                {item.badge && (
-                  <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                {item.title === "Aprobaciones" && pendingCount > 0 && (
+                  <SidebarMenuBadge>{pendingCount}</SidebarMenuBadge>
                 )}
               </SidebarMenuItem>
             ))}
@@ -92,14 +106,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Registro de Artista">
-              <a href="/registro" target="_blank" rel="noopener noreferrer">
-                <ClipboardEditIcon />
-                <span>Registro de Artista</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Ver Catálogo">
               <a href="/catalogo" target="_blank" rel="noopener noreferrer">
@@ -110,7 +116,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
         <NavUser
-          user={{
+          user={user ?? {
             name: "Administrador",
             email: "admin@apparta.co",
             avatar: "",
