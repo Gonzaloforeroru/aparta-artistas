@@ -77,10 +77,15 @@ export function AppSidebar({ user, pendingCount = 0, ...props }: AppSidebarProps
       collapsible="icon" 
       className="top-0 h-full overflow-hidden relative before:absolute before:right-0 before:top-0 before:bottom-0 before:w-[1px] before:bg-gradient-to-b before:from-[#6E2FE3] before:via-[#F31A7C] before:to-[#0CABF7] before:opacity-60"
       style={{
-        background: 'radial-gradient(circle at 20% 80%, rgba(243, 26, 124, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(110, 47, 227, 0.1) 0%, transparent 50%), var(--sidebar)',
+        background: 'radial-gradient(circle at 30% 70%, rgba(110, 47, 227, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 30%, rgba(243, 26, 124, 0.12) 0%, transparent 50%), var(--sidebar)',
       }}
       {...props}
     >
+      {/* Visible blobs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-16 -left-8 h-40 w-40 rounded-full bg-[#6E2FE3] opacity-20 blur-2xl" />
+        <div className="absolute bottom-20 -right-8 h-32 w-32 rounded-full bg-[#F31A7C] opacity-15 blur-xl" />
+      </div>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
