@@ -15,7 +15,7 @@ import {
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 flex h-(--header-height) shrink-0 items-center gap-2 border-b bg-background px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+    <header className="sticky top-0 z-50 flex h-(--header-height) shrink-0 items-center gap-2 border-b bg-background px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 relative before:absolute before:bottom-0 before:left-0 before:right-0 before:h-[1px] before:bg-gradient-to-r before:from-[#6E2FE3] before:via-[#F31A7C] before:to-[#0CABF7] before:opacity-40">
       <div className="flex flex-1 items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator
