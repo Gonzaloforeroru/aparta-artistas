@@ -138,8 +138,8 @@ export function AppSidebar({ user, pendingCount = 0, ...props }: AppSidebarProps
           }}
         />
       </SidebarFooter>
-      <SidebarRail />
       </div>
+      <SidebarRail />
     </Sidebar>
   )
 }
