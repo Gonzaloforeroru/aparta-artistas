@@ -78,6 +78,13 @@ export function AppSidebar({ user, pendingCount = 0, ...props }: AppSidebarProps
       className="top-0 h-full overflow-hidden relative before:absolute before:right-0 before:top-0 before:bottom-0 before:w-[1px] before:bg-gradient-to-b before:from-[#6E2FE3] before:via-[#F31A7C] before:to-[#0CABF7] before:opacity-60"
       {...props}
     >
+      {/* Gradient blobs in sidebar */}
+      <div className="pointer-events-none absolute inset-0 h-full w-full overflow-hidden">
+        <div className="absolute -top-[200px] -left-[100px] h-[500px] w-[500px] rounded-full bg-[#6E2FE3] opacity-15 blur-[120px]" />
+        <div className="absolute bottom-[20%] right-[-50px] h-[400px] w-[400px] rounded-full bg-[#F31A7C] opacity-10 blur-[100px]" />
+        <div className="absolute top-[50%] left-[10%] h-[300px] w-[300px] rounded-full bg-[#0CABF7] opacity-8 blur-[90px]" />
+      </div>
+      <div className="relative z-10">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -133,6 +140,7 @@ export function AppSidebar({ user, pendingCount = 0, ...props }: AppSidebarProps
         />
       </SidebarFooter>
       <SidebarRail />
+      </div>
     </Sidebar>
   )
 }
