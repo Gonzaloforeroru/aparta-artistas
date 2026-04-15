@@ -4,169 +4,257 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-}
-
-/* ==========================================================================
-   LIGHT MODE — Vibrant startup aesthetic
-   Primary: Electric Violet (#7C3AED / oklch 0.541 0.281 293)
-   Accent: Coral pink for warmth
-   Clean whites with just enough warmth
-   ========================================================================== */
-
 :root {
-  --background: oklch(0.985 0.002 280);
-  --foreground: oklch(0.13 0.028 285);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.13 0.028 285);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.13 0.028 285);
-  --primary: oklch(0.541 0.281 293);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.955 0.025 293);
-  --secondary-foreground: oklch(0.395 0.185 293);
-  --muted: oklch(0.955 0.012 280);
-  --muted-foreground: oklch(0.50 0.02 280);
-  --accent: oklch(0.945 0.035 293);
-  --accent-foreground: oklch(0.395 0.185 293);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.012 280);
-  --input: oklch(0.91 0.012 280);
-  --ring: oklch(0.541 0.281 293);
-  --radius: 0.625rem;
+    --background: #FFFFFF;
+    --foreground: #131517;
+    --card: #F4F4F5;
+    --card-foreground: #131517;
+    --popover: #FFFFFF;
+    --popover-foreground: #131517;
+    --primary: #131517;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F4F4F5;
+    --secondary-foreground: #131517;
+    --muted: #F4F4F5;
+    --muted-foreground: #71717A;
+    --accent: #F4F4F5;
+    --accent-foreground: #131517;
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+    --border: #E4E4E7;
+    --input: #E4E4E7;
+    --ring: #A1A1AA;
 
-  /* Charts — 5 vibrant distinct colors */
-  --chart-1: oklch(0.541 0.281 293);
-  --chart-2: oklch(0.65 0.22 160);
-  --chart-3: oklch(0.70 0.18 50);
-  --chart-4: oklch(0.60 0.24 340);
-  --chart-5: oklch(0.65 0.20 230);
+    --cta: #F31A7C;
+    --cta-foreground: #FFFFFF;
+    --success: #16A34A;
+    --success-foreground: #FFFFFF;
+    --warning: #D97706;
+    --warning-foreground: #FFFFFF;
 
-  /* Sidebar — dark even in light mode for contrast */
-  --sidebar: oklch(0.16 0.025 285);
-  --sidebar-foreground: oklch(0.92 0.01 280);
-  --sidebar-primary: oklch(0.65 0.28 293);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.22 0.03 285);
-  --sidebar-accent-foreground: oklch(0.92 0.01 280);
-  --sidebar-border: oklch(0.25 0.02 285);
-  --sidebar-ring: oklch(0.541 0.281 293);
+    --accent-pink: #EC4899;
+    --accent-blue: #3B82F6;
+    --accent-amber: #D97706;
 
-  /* Apparta custom tokens */
-  --whatsapp: #25D366;
-  --whatsapp-hover: #1DA851;
-  --success: #10B981;
-  --success-bg: #ECFDF5;
-  --warning: #F59E0B;
-  --warning-bg: #FFFBEB;
-  --error: #EF4444;
-  --error-bg: #FEF2F2;
+    --elevated: #0000000A;
+    --card-hover: #00000008;
+    --surface-3: #00000014;
+
+    --border-subtle: #0000000A;
+    --border-strong: #131517;
+
+    --text-tertiary: #52525B;
+    --text-muted: #A1A1AA;
+    --text-inverse: #FFFFFF;
+
+    --chart-1: #F31A7C;
+    --chart-2: #6E2FE3;
+    --chart-3: #0CABF7;
+    --chart-4: #E2741B;
+    --chart-5: #22C55E;
+
+    --radius: 0.875rem;
+
+    --sidebar: #F9FAFB;
+    --sidebar-foreground: #131517;
+    --sidebar-primary: #F31A7C;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #F4F4F5;
+    --sidebar-accent-foreground: #131517;
+    --sidebar-border: #E4E4E7;
+    --sidebar-ring: #A1A1AA;
+
+    /* Apparta custom tokens */
+    --whatsapp: #25D366;
+    --whatsapp-hover: #1DA851;
+    --error: #EF4444;
+    --error-bg: #FEF2F2;
+    --success-bg: #ECFDF5;
+    --warning-bg: #FFFBEB;
 }
-
-/* ==========================================================================
-   DARK MODE — Deep, immersive, neon accents
-   Background: Deep navy-black
-   Primary: Brighter violet (neon shift)
-   Cards: Subtle elevated surfaces
-   ========================================================================== */
 
 .dark {
-  --background: oklch(0.11 0.02 285);
-  --foreground: oklch(0.95 0.005 280);
-  --card: oklch(0.17 0.025 285);
-  --card-foreground: oklch(0.95 0.005 280);
-  --popover: oklch(0.17 0.025 285);
-  --popover-foreground: oklch(0.95 0.005 280);
-  --primary: oklch(0.65 0.28 293);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.22 0.035 285);
-  --secondary-foreground: oklch(0.90 0.01 280);
-  --muted: oklch(0.20 0.025 285);
-  --muted-foreground: oklch(0.60 0.02 280);
-  --accent: oklch(0.22 0.035 285);
-  --accent-foreground: oklch(0.90 0.01 280);
-  --destructive: oklch(0.65 0.22 25);
-  --border: oklch(0.24 0.025 285);
-  --input: oklch(0.24 0.025 285);
-  --ring: oklch(0.65 0.28 293);
+    --background: #131517;
+    --foreground: #FFFFFF;
+    --card: #FFFFFF0A;
+    --card-foreground: #FFFFFF;
+    --popover: #1E2024;
+    --popover-foreground: #FFFFFF;
+    --primary: #FFFFFF;
+    --primary-foreground: #131517;
+    --secondary: #FFFFFF14;
+    --secondary-foreground: #FFFFFFC9;
+    --muted: #FFFFFF14;
+    --muted-foreground: #FFFFFF80;
+    --accent: #FFFFFF14;
+    --accent-foreground: #FFFFFFA3;
+    --destructive: #FF4444;
+    --destructive-foreground: #FFFFFF;
+    --border: #FFFFFF14;
+    --input: #FFFFFF14;
+    --ring: #FFFFFF80;
 
-  /* Charts — brighter for dark bg */
-  --chart-1: oklch(0.70 0.28 293);
-  --chart-2: oklch(0.72 0.22 160);
-  --chart-3: oklch(0.75 0.18 50);
-  --chart-4: oklch(0.68 0.24 340);
-  --chart-5: oklch(0.72 0.20 230);
+    --cta: #F31A7C;
+    --cta-foreground: #FFFFFF;
+    --success: #22C55E;
+    --success-foreground: #FFFFFF;
+    --warning: #F59E0B;
+    --warning-foreground: #131517;
 
-  /* Sidebar — blends with dark background */
-  --sidebar: oklch(0.13 0.02 285);
-  --sidebar-foreground: oklch(0.90 0.01 280);
-  --sidebar-primary: oklch(0.65 0.28 293);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.20 0.03 285);
-  --sidebar-accent-foreground: oklch(0.90 0.01 280);
-  --sidebar-border: oklch(0.22 0.02 285);
-  --sidebar-ring: oklch(0.65 0.28 293);
+    --accent-pink: #F98DBE;
+    --accent-blue: #76ADFF;
+    --accent-amber: #F2CA77;
 
-  /* Apparta custom tokens — brighter for dark bg */
-  --whatsapp: #34D399;
-  --whatsapp-hover: #25D366;
-  --success: #34D399;
-  --success-bg: rgba(16, 185, 129, 0.15);
-  --warning: #FBBF24;
-  --warning-bg: rgba(245, 158, 11, 0.12);
-  --error: #F87171;
-  --error-bg: rgba(239, 68, 68, 0.12);
+    --elevated: #FFFFFF14;
+    --card-hover: #FFFFFF14;
+    --surface-3: #FFFFFF29;
+
+    --border-subtle: #FFFFFF0A;
+    --border-strong: #FFFFFF;
+
+    --text-tertiary: #FFFFFFA3;
+    --text-muted: #FFFFFF80;
+    --text-inverse: #131517;
+
+    --chart-1: #F31A7C;
+    --chart-2: #6E2FE3;
+    --chart-3: #0CABF7;
+    --chart-4: #E2741B;
+    --chart-5: #22C55E;
+
+    --sidebar: #0D0E10;
+    --sidebar-foreground: #FFFFFF;
+    --sidebar-primary: #F31A7C;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #FFFFFF14;
+    --sidebar-accent-foreground: #FFFFFFC9;
+    --sidebar-border: #FFFFFF0A;
+    --sidebar-ring: #FFFFFF80;
+
+    /* Apparta custom tokens — brighter for dark bg */
+    --whatsapp: #34D399;
+    --whatsapp-hover: #25D366;
+    --error: #F87171;
+    --error-bg: rgba(239, 68, 68, 0.12);
+    --success-bg: rgba(22, 163, 74, 0.15);
+    --warning-bg: rgba(245, 158, 11, 0.12);
+}
+
+@theme inline {
+    --font-sans: var(--font-sans);
+    --font-heading: var(--font-heading);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-cta: var(--cta);
+    --color-cta-foreground: var(--cta-foreground);
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+
+    --color-accent-pink: var(--accent-pink);
+    --color-accent-blue: var(--accent-blue);
+    --color-accent-amber: var(--accent-amber);
+
+    --color-elevated: var(--elevated);
+    --color-card-hover: var(--card-hover);
+    --color-surface-3: var(--surface-3);
+
+    --color-border-subtle: var(--border-subtle);
+    --color-border-strong: var(--border-strong);
+
+    --color-text-tertiary: var(--text-tertiary);
+    --color-text-muted: var(--text-muted);
+    --color-text-inverse: var(--text-inverse);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-  }
+    }
   body {
     @apply bg-background text-foreground;
-  }
+    }
   html {
     @apply font-sans;
-  }
+    }
+}
+
+/* ── Gradient border utility ─────────────────────────── */
+/* Works with border-radius via double-background trick  */
+.gradient-border {
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(var(--gb-bg, var(--background)), var(--gb-bg, var(--background))),
+    linear-gradient(135deg, #6E2FE3 0%, #F31A7C 50%, #0CABF7 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+/* Glass card = gradient border + translucent fill + blur */
+.glass-card {
+  --gb-bg: rgba(255, 255, 255, 0.92);
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(var(--gb-bg), var(--gb-bg)),
+    linear-gradient(135deg, #6E2FE3 0%, #F31A7C 50%, #0CABF7 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  backdrop-filter: blur(16px) saturate(1.4);
+}
+.dark .glass-card {
+  --gb-bg: rgba(19, 21, 23, 0.75);
+}
+/* Subtle variant for smaller components (cards, inputs) */
+.gradient-border-subtle {
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(var(--gb-bg, var(--background)), var(--gb-bg, var(--background))),
+    linear-gradient(135deg, rgba(111,47,227,0.4) 0%, rgba(243,26,124,0.3) 50%, rgba(12,171,247,0.25) 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+.dark .gradient-border-subtle {
+  --gb-bg: rgba(255, 255, 255, 0.04);
 }

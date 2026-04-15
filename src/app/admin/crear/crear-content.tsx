@@ -14,7 +14,8 @@ import {
 import { cities, artistTypes, genres } from "@/lib/data";
 import type { Tables } from "@/lib/supabase/database.types";
 import { createArtist, updateArtist } from "@/app/admin/actions";
-import { ArrowLeft, Upload, MessageCircle } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon, Upload01Icon, BubbleChatIcon } from "@hugeicons/core-free-icons";
 import { InstagramIcon, YoutubeIcon, TikTokIcon, SpotifyIcon } from "@/components/social-icons";
 import Link from "next/link";
 
@@ -51,8 +52,8 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
       <div className="flex items-center gap-4">
-        <Button asChild variant="ghost" size="icon">
-          <Link href="/admin/lista"><ArrowLeft className="h-4 w-4" /></Link>
+        <Button nativeButton={false} render={<Link href="/admin/lista" />} variant="ghost" size="icon">
+          <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4 w-4" />
         </Button>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{isEditing ? "Editar Artista" : "Crear Nuevo Artista"}</h1>
@@ -62,7 +63,7 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
 
       <form action={handleSubmit}>
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-          <Card className="h-fit">
+           <Card className="h-fit gradient-border-subtle">
             <CardContent className="flex flex-col items-center gap-4 p-6">
               <Label className="text-sm font-medium">Foto de perfil</Label>
               <label className="flex h-48 w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50">
@@ -72,7 +73,7 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
                 ) : (
                   <>
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                      <Upload className="h-5 w-5 text-muted-foreground" />
+                      <HugeiconsIcon icon={Upload01Icon} className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div className="text-center">
                       <p className="text-sm font-medium">Subir foto</p>
@@ -85,7 +86,7 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
             </CardContent>
           </Card>
 
-          <Card>
+           <Card className="gradient-border-subtle">
             <CardContent className="flex flex-col gap-6 p-6">
               <div className="flex flex-col gap-4">
                 <p className="text-sm font-semibold">Datos Principales</p>
@@ -118,7 +119,7 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="phone">WhatsApp <span className="text-destructive">*</span></Label>
                     <div className="relative">
-                      <MessageCircle className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--whatsapp)]" />
+                      <HugeiconsIcon icon={BubbleChatIcon} className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--whatsapp)]" />
                       <Input id="phone" name="phone" placeholder="310 123 4567" className="pl-10" defaultValue={existingArtist?.phone ?? ""} required />
                     </div>
                   </div>
@@ -171,7 +172,7 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
               <Separator />
 
               <div className="flex items-center justify-end gap-3">
-                <Button asChild variant="outline"><Link href="/admin/lista">Cancelar</Link></Button>
+                <Button nativeButton={false} render={<Link href="/admin/lista" />} variant="outline">Cancelar</Button>
                 <Button type="submit" disabled={isPending}>{isPending ? "Guardando..." : isEditing ? "Actualizar" : "Guardar"}</Button>
               </div>
             </CardContent>

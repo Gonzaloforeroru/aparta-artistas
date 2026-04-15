@@ -36,14 +36,15 @@ import { formatPrice } from "@/lib/data"
 import type { Tables } from "@/lib/supabase/database.types"
 
 type Artist = Tables<"artists">
+import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  BarChart3Icon,
+  BarChartIcon,
   PieChartIcon,
-  ActivityIcon,
-  TrendingUpIcon,
-  ShareIcon,
-  MusicIcon,
-} from "lucide-react"
+  Activity01Icon,
+  AnalyticsUpIcon,
+  Share01Icon,
+  MusicNote01Icon,
+} from "@hugeicons/core-free-icons"
 
 function countBy<T>(items: T[], key: (item: T) => string) {
   const map = new Map<string, number>()
@@ -165,17 +166,17 @@ export function MetricasCharts({ artists }: { artists: Artist[] }) {
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <ActivityIcon className="size-3.5" />
+          <HugeiconsIcon icon={Activity01Icon} className="size-3.5" />
           <span>{totalArtists} artistas registrados</span>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+         <Card className="gradient-border-subtle">
           <CardHeader>
             <div className="flex items-center gap-2">
               <div className="flex size-8 items-center justify-center rounded-lg bg-chart-1/10">
-                <BarChart3Icon className="size-4 text-chart-1" />
+                <HugeiconsIcon icon={BarChartIcon} className="size-4 text-chart-1" />
               </div>
               <div>
                 <CardTitle>Artistas por Ciudad</CardTitle>
@@ -224,13 +225,13 @@ export function MetricasCharts({ artists }: { artists: Artist[] }) {
               </BarChart>
             </ChartContainer>
           </CardContent>
-        </Card>
+         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-chart-2/10">
-                <PieChartIcon className="size-4 text-chart-2" />
+         <Card className="gradient-border-subtle">
+           <CardHeader>
+             <div className="flex items-center gap-2">
+               <div className="flex size-8 items-center justify-center rounded-lg bg-chart-2/10">
+                 <HugeiconsIcon icon={PieChartIcon} className="size-4 text-chart-2" />
               </div>
               <div>
                 <CardTitle>Distribución por Profesión</CardTitle>
@@ -294,14 +295,14 @@ export function MetricasCharts({ artists }: { artists: Artist[] }) {
                 <ChartLegend content={<ChartLegendContent nameKey="name" />} />
               </PieChart>
             </ChartContainer>
-          </CardContent>
-        </Card>
+           </CardContent>
+         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-chart-3/10">
-                <ActivityIcon className="size-4 text-chart-3" />
+         <Card className="gradient-border-subtle">
+           <CardHeader>
+             <div className="flex items-center gap-2">
+               <div className="flex size-8 items-center justify-center rounded-lg bg-chart-3/10">
+                 <HugeiconsIcon icon={Activity01Icon} className="size-4 text-chart-3" />
               </div>
               <div>
                 <CardTitle>Estado de Artistas</CardTitle>
@@ -352,15 +353,15 @@ export function MetricasCharts({ artists }: { artists: Artist[] }) {
                   </span>
                 </div>
               ))}
-            </div>
-          </CardContent>
-        </Card>
+             </div>
+           </CardContent>
+         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-chart-4/10">
-                <TrendingUpIcon className="size-4 text-chart-4" />
+         <Card className="gradient-border-subtle">
+           <CardHeader>
+             <div className="flex items-center gap-2">
+               <div className="flex size-8 items-center justify-center rounded-lg bg-chart-4/10">
+                 <HugeiconsIcon icon={AnalyticsUpIcon} className="size-4 text-chart-4" />
               </div>
               <div>
                 <CardTitle>Rango de Precios</CardTitle>
@@ -454,15 +455,15 @@ export function MetricasCharts({ artists }: { artists: Artist[] }) {
                   }}
                 />
               </AreaChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+             </ChartContainer>
+           </CardContent>
+         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-chart-5/10">
-                <ShareIcon className="size-4 text-chart-5" />
+         <Card className="gradient-border-subtle">
+           <CardHeader>
+             <div className="flex items-center gap-2">
+               <div className="flex size-8 items-center justify-center rounded-lg bg-chart-5/10">
+                 <HugeiconsIcon icon={Share01Icon} className="size-4 text-chart-5" />
               </div>
               <div>
                 <CardTitle>Cobertura de Redes Sociales</CardTitle>
@@ -544,14 +545,14 @@ export function MetricasCharts({ artists }: { artists: Artist[] }) {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+           </CardContent>
+         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-chart-1/10">
-                <MusicIcon className="size-4 text-chart-1" />
+         <Card className="gradient-border-subtle">
+           <CardHeader>
+             <div className="flex items-center gap-2">
+               <div className="flex size-8 items-center justify-center rounded-lg bg-chart-1/10">
+                 <HugeiconsIcon icon={MusicNote01Icon} className="size-4 text-chart-1" />
               </div>
               <div>
                 <CardTitle>Artistas por Género Musical</CardTitle>

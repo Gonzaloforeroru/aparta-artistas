@@ -16,7 +16,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Upload, FileSpreadsheet, CheckCircle, XCircle, Download } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Upload01Icon, FileSpreadsheetIcon, CheckmarkCircle01Icon,
+  CancelCircleIcon, Download01Icon,
+} from "@hugeicons/core-free-icons";
 
 interface CsvRow {
   nombre: string;
@@ -132,32 +136,30 @@ export default function AdminImportarPage() {
           <p className="text-sm text-muted-foreground">Carga masiva de artistas desde archivo CSV</p>
         </div>
         <Button variant="outline" size="sm" className="gap-2" onClick={downloadTemplate}>
-          <Download className="size-4" />
+          <HugeiconsIcon icon={Download01Icon} className="size-4" />
           Descargar plantilla CSV
         </Button>
       </div>
 
-      {!preview ? (
-        <Card
-          className={`border-2 border-dashed transition-colors ${isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50"}`}
+       {!preview ? (
+         <Card
+           className={`gradient-border-subtle border-2 border-dashed transition-colors ${isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50"}`}
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFile(e.dataTransfer.files[0]); }}
         >
           <CardContent className="flex flex-col items-center justify-center gap-4 py-16">
             <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
-              <FileSpreadsheet className="size-8 text-primary" />
+              <HugeiconsIcon icon={FileSpreadsheetIcon} className="size-8 text-primary" />
             </div>
             <div className="text-center">
               <p className="text-lg font-semibold text-foreground">Arrastra tu archivo CSV aquí</p>
               <p className="text-sm text-muted-foreground mt-1">o haz clic para seleccionar</p>
             </div>
-            <Button variant="outline" className="gap-2" asChild>
-              <label>
-                <Upload className="size-4" />
-                Seleccionar archivo
-                <input type="file" accept=".csv" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
-              </label>
+            <Button nativeButton={false} render={<label />} variant="outline" className="gap-2">
+              <HugeiconsIcon icon={Upload01Icon} className="size-4" />
+              Seleccionar archivo
+              <input type="file" accept=".csv" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
             </Button>
             <p className="text-xs text-muted-foreground">
               Columnas: nombre, ciudad, tipo, genero, telefono, precio, duracion, instagram, tiktok, youtube, spotify
@@ -165,8 +167,8 @@ export default function AdminImportarPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="flex flex-col gap-4">
-          <Card>
+         <div className="flex flex-col gap-4">
+           <Card className="gradient-border-subtle">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -175,18 +177,18 @@ export default function AdminImportarPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge variant="secondary" className="bg-[var(--success-bg)] text-[var(--success)]">
-                    <CheckCircle className="mr-1 size-3" /> {validCount} válidas
+                    <HugeiconsIcon icon={CheckmarkCircle01Icon} className="mr-1 size-3" /> {validCount} válidas
                   </Badge>
                   {invalidCount > 0 && (
                     <Badge variant="secondary" className="bg-[var(--error-bg)] text-[var(--error)]">
-                      <XCircle className="mr-1 size-3" /> {invalidCount} con errores
+                      <HugeiconsIcon icon={CancelCircleIcon} className="mr-1 size-3" /> {invalidCount} con errores
                     </Badge>
                   )}
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="rounded-lg border">
+               <div className="rounded-lg gradient-border-subtle">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -204,9 +206,9 @@ export default function AdminImportarPage() {
                       <TableRow key={i} className={row.valid ? "" : "bg-[var(--error-bg)]/30"}>
                         <TableCell>
                           {row.valid ? (
-                            <CheckCircle className="size-4 text-[var(--success)]" />
+                            <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-4 text-[var(--success)]" />
                           ) : (
-                            <XCircle className="size-4 text-[var(--error)]" />
+                            <HugeiconsIcon icon={CancelCircleIcon} className="size-4 text-[var(--error)]" />
                           )}
                         </TableCell>
                         <TableCell className="font-medium">{row.nombre || <span className="text-[var(--error)] italic">vacío</span>}</TableCell>
@@ -226,7 +228,7 @@ export default function AdminImportarPage() {
           <div className="flex items-center justify-end gap-3">
             <Button variant="outline" onClick={() => setPreview(null)}>Cancelar</Button>
             <Button onClick={handleImport} disabled={isPending || validCount === 0} className="gap-2">
-              <Upload className="size-4" />
+              <HugeiconsIcon icon={Upload01Icon} className="size-4" />
               {isPending ? "Importando..." : `Importar ${validCount} artistas válidos`}
             </Button>
           </div>

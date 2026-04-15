@@ -10,7 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Link2, Copy, CheckCircle, Clock, XCircle, Plus } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { IconSvgElement } from "@hugeicons/react";
+import {
+  Link01Icon, Copy01Icon, CheckmarkCircle01Icon,
+  Clock01Icon, CancelCircleIcon, Add01Icon,
+} from "@hugeicons/core-free-icons";
 import { createInvitation } from "@/app/admin/actions";
 import type { Tables } from "@/lib/supabase/database.types";
 
@@ -24,12 +29,12 @@ function getStatus(inv: Invitation): "pendiente" | "usado" | "expirado" {
 
 function StatusBadge({ status }: { status: "pendiente" | "usado" | "expirado" }) {
   const config = {
-    pendiente: { label: "Pendiente", icon: Clock, className: "bg-[var(--warning-bg)] text-[var(--warning)]" },
-    usado: { label: "Usado", icon: CheckCircle, className: "bg-[var(--success-bg)] text-[var(--success)]" },
-    expirado: { label: "Expirado", icon: XCircle, className: "bg-muted text-muted-foreground" },
+    pendiente: { label: "Pendiente", icon: Clock01Icon, className: "bg-[var(--warning-bg)] text-[var(--warning)]" },
+    usado: { label: "Usado", icon: CheckmarkCircle01Icon, className: "bg-[var(--success-bg)] text-[var(--success)]" },
+    expirado: { label: "Expirado", icon: CancelCircleIcon, className: "bg-muted text-muted-foreground" },
   };
   const c = config[status];
-  return (<Badge variant="secondary" className={c.className}><c.icon className="mr-1 size-3" /> {c.label}</Badge>);
+  return (<Badge variant="secondary" className={c.className}><HugeiconsIcon icon={c.icon as IconSvgElement} className="mr-1 size-3" /> {c.label}</Badge>);
 }
 
 export function InvitacionesContent({ invitations }: { invitations: Invitation[] }) {
@@ -65,9 +70,9 @@ export function InvitacionesContent({ invitations }: { invitations: Invitation[]
         <p className="text-sm text-muted-foreground">Genera links de registro de un solo uso para artistas</p>
       </div>
 
-      <Card>
+      <Card className="gradient-border-subtle">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Link2 className="size-5 text-primary" />Generar Link de Registro</CardTitle>
+          <CardTitle className="flex items-center gap-2"><HugeiconsIcon icon={Link01Icon} className="size-5 text-primary" />Generar Link de Registro</CardTitle>
           <CardDescription>El link expira en 24 horas y solo se puede usar una vez</CardDescription>
         </CardHeader>
         <CardContent>
@@ -79,7 +84,7 @@ export function InvitacionesContent({ invitations }: { invitations: Invitation[]
                   value={nota} onChange={(e) => setNota(e.target.value)} />
               </div>
               <Button onClick={handleGenerate} disabled={isPending} className="h-11 gap-2 w-fit">
-                <Plus className="size-4" />Generar Link
+                <HugeiconsIcon icon={Add01Icon} className="size-4" />Generar Link
               </Button>
             </div>
           ) : (
@@ -88,11 +93,11 @@ export function InvitacionesContent({ invitations }: { invitations: Invitation[]
                 <Label className="text-muted-foreground">Link generado{nota ? ` — ${nota}` : ""}</Label>
                 <div className="flex items-center gap-2">
                   <Input value={generatedLink} readOnly className="h-11 font-mono text-sm" />
-                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" onClick={handleCopy}><Copy className="size-4" /></Button>
+                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" onClick={handleCopy}><HugeiconsIcon icon={Copy01Icon} className="size-4" /></Button>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-[var(--warning-bg)] text-[var(--warning)]"><Clock className="mr-1 size-3" /> Expira en 24 horas</Badge>
+                <Badge variant="secondary" className="bg-[var(--warning-bg)] text-[var(--warning)]"><HugeiconsIcon icon={Clock01Icon} className="mr-1 size-3" /> Expira en 24 horas</Badge>
                 <Button variant="ghost" size="sm" onClick={handleReset}>Generar otra</Button>
               </div>
             </div>
@@ -100,13 +105,13 @@ export function InvitacionesContent({ invitations }: { invitations: Invitation[]
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Historial de Invitaciones</CardTitle>
+       <Card className="gradient-border-subtle">
+         <CardHeader>
+           <CardTitle>Historial de Invitaciones</CardTitle>
           <CardDescription>{invitations.length} invitaciones en total</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border">
+           <div className="rounded-lg gradient-border-subtle">
             <Table>
               <TableHeader>
                 <TableRow>

@@ -2,7 +2,8 @@
 
 import { useSyncExternalStore } from "react"
 import { useTheme } from "next-themes"
-import { SunIcon, MoonIcon } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Sun01Icon, Moon01Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 
 const emptySubscribe = () => () => {}
@@ -17,7 +18,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <Button variant="ghost" size="icon" className="h-8 w-8" disabled>
-        <SunIcon className="size-4" />
+        <HugeiconsIcon icon={Sun01Icon} className="size-4" />
       </Button>
     )
   }
@@ -30,9 +31,9 @@ export function ThemeToggle() {
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
     >
       {theme === "dark" ? (
-        <SunIcon className="size-4" />
+        <HugeiconsIcon icon={Sun01Icon} className="size-4" />
       ) : (
-        <MoonIcon className="size-4" />
+        <HugeiconsIcon icon={Moon01Icon} className="size-4" />
       )}
       <span className="sr-only">Cambiar tema</span>
     </Button>

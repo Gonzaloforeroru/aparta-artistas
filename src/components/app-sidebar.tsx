@@ -16,40 +16,51 @@ import {
   SidebarGroupLabel,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { Music2Icon, LayoutDashboardIcon, ListIcon, CheckCircleIcon, BarChart3Icon, ExternalLinkIcon, UploadIcon, MailIcon } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import type { IconSvgElement } from "@hugeicons/react"
+import {
+  MusicNote02Icon,
+  DashboardSquare01Icon,
+  ListViewIcon,
+  CheckmarkCircle01Icon,
+  BarChartIcon,
+  ArrowUpRight01Icon,
+  Upload01Icon,
+  Mail01Icon,
+} from "@hugeicons/core-free-icons"
 import Link from "next/link"
 
 const adminNav = [
   {
     title: "Dashboard",
     url: "/admin",
-    icon: LayoutDashboardIcon,
+    icon: DashboardSquare01Icon,
     exact: true,
   },
   {
     title: "Artistas",
     url: "/admin/lista",
-    icon: ListIcon,
+    icon: ListViewIcon,
   },
   {
     title: "Importar CSV",
     url: "/admin/importar",
-    icon: UploadIcon,
+    icon: Upload01Icon,
   },
   {
     title: "Invitaciones",
     url: "/admin/invitaciones",
-    icon: MailIcon,
+    icon: Mail01Icon,
   },
   {
     title: "Aprobaciones",
     url: "/admin/aprobaciones",
-    icon: CheckCircleIcon,
+    icon: CheckmarkCircle01Icon,
   },
   {
     title: "Métricas",
     url: "/admin/metricas",
-    icon: BarChart3Icon,
+    icon: BarChartIcon,
   },
 ]
 
@@ -66,16 +77,14 @@ export function AppSidebar({ user, pendingCount = 0, ...props }: AppSidebarProps
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/admin">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Music2Icon className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Apparta</span>
-                  <span className="truncate text-xs">Panel de Artistas</span>
-                </div>
-              </Link>
+            <SidebarMenuButton size="lg" render={<Link href="/admin" />}>
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <HugeiconsIcon icon={MusicNote02Icon} className="size-4" />
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">Apparta</span>
+                <span className="truncate text-xs">Panel de Artistas</span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -87,14 +96,12 @@ export function AppSidebar({ user, pendingCount = 0, ...props }: AppSidebarProps
             {adminNav.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
-                  asChild
+                  render={<Link href={item.url} />}
                   isActive={item.exact ? pathname === item.url : pathname?.startsWith(item.url)}
                   tooltip={item.title}
                 >
-                  <Link href={item.url}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </Link>
+                  <HugeiconsIcon icon={item.icon as IconSvgElement} />
+                  <span>{item.title}</span>
                 </SidebarMenuButton>
                 {item.title === "Aprobaciones" && pendingCount > 0 && (
                   <SidebarMenuBadge>{pendingCount}</SidebarMenuBadge>
@@ -107,11 +114,9 @@ export function AppSidebar({ user, pendingCount = 0, ...props }: AppSidebarProps
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Ver Catálogo">
-              <a href="/catalogo" target="_blank" rel="noopener noreferrer">
-                <ExternalLinkIcon />
-                <span>Ver Catálogo</span>
-              </a>
+            <SidebarMenuButton render={<a href="/catalogo" target="_blank" rel="noopener noreferrer" />} tooltip="Ver Catálogo">
+              <HugeiconsIcon icon={ArrowUpRight01Icon} />
+              <span>Ver Catálogo</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

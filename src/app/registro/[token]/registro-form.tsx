@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cities, artistTypes, genres } from "@/lib/data";
-import { Upload, MessageCircle, Music2 } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Upload01Icon, BubbleChatIcon, MusicNote02Icon } from "@hugeicons/core-free-icons";
 import { InstagramIcon, YoutubeIcon, TikTokIcon, SpotifyIcon } from "@/components/social-icons";
 import { registerArtistWithToken } from "@/app/admin/actions";
 
@@ -46,7 +47,7 @@ export function RegistroForm({ token }: { token: string }) {
     <div className="w-full max-w-[560px]">
       <div className="mb-8 flex flex-col items-center gap-1">
         <div className="mb-2 flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-          <Music2 className="size-6" />
+          <HugeiconsIcon icon={MusicNote02Icon} className="size-6" />
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Apparta</h1>
         <h2 className="text-xl font-semibold text-foreground">Registro de Artista</h2>
@@ -55,7 +56,7 @@ export function RegistroForm({ token }: { token: string }) {
         </p>
       </div>
 
-      <Card className="border-0 shadow-lg">
+      <Card className="glass-card border-0 shadow-lg">
         <CardContent className="p-8">
           <form action={handleSubmit} className="flex flex-col gap-6">
             {/* Foto */}
@@ -67,7 +68,7 @@ export function RegistroForm({ token }: { token: string }) {
                   <img src={photoPreview} alt="Preview" className="size-24 rounded-full object-cover" />
                 ) : (
                   <div className="flex size-14 items-center justify-center rounded-full bg-muted">
-                    <Upload className="size-6 text-muted-foreground" />
+                    <HugeiconsIcon icon={Upload01Icon} className="size-6 text-muted-foreground" />
                   </div>
                 )}
                 <div className="text-center">
@@ -143,7 +144,7 @@ export function RegistroForm({ token }: { token: string }) {
               <div className="flex flex-col gap-2">
                 <Label htmlFor="phone">Teléfono WhatsApp <span className="text-destructive">*</span></Label>
                 <div className="relative">
-                  <MessageCircle className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--whatsapp)]" />
+                  <HugeiconsIcon icon={BubbleChatIcon} className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--whatsapp)]" />
                   <Input id="phone" name="phone" placeholder="310 123 4567" className="h-11 pl-10" required />
                 </div>
               </div>

@@ -18,7 +18,11 @@ import { cities, artistTypes, formatPrice } from "@/lib/data";
 import type { Tables, ArtistStatus } from "@/lib/supabase/database.types";
 import { deleteArtist, toggleArtistActive } from "@/app/admin/actions";
 import { toast } from "sonner";
-import { Search, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Upload, Mail } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Search01Icon, Add01Icon, PencilEdit01Icon, Delete02Icon,
+  ToggleOffIcon, ToggleOnIcon, Upload01Icon, Mail01Icon,
+} from "@hugeicons/core-free-icons";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -85,40 +89,40 @@ export function ListaContent({ artists }: { artists: Artist[] }) {
           <p className="text-sm text-muted-foreground">{artists.length} artistas en total</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button asChild variant="outline" size="sm" className="gap-2">
-            <Link href="/admin/importar"><Upload className="h-4 w-4" /><span className="hidden sm:inline">Importar CSV</span></Link>
+          <Button nativeButton={false} render={<Link href="/admin/importar" />} variant="outline" size="sm" className="gap-2">
+            <HugeiconsIcon icon={Upload01Icon} className="h-4 w-4" /><span className="hidden sm:inline">Importar CSV</span>
           </Button>
-          <Button asChild variant="outline" size="sm" className="gap-2">
-            <Link href="/admin/invitaciones"><Mail className="h-4 w-4" /><span className="hidden sm:inline">Invitar Artista</span></Link>
+          <Button nativeButton={false} render={<Link href="/admin/invitaciones" />} variant="outline" size="sm" className="gap-2">
+            <HugeiconsIcon icon={Mail01Icon} className="h-4 w-4" /><span className="hidden sm:inline">Invitar Artista</span>
           </Button>
-          <Button asChild size="sm" className="gap-2">
-            <Link href="/admin/crear"><Plus className="h-4 w-4" />Nuevo Artista</Link>
+          <Button nativeButton={false} render={<Link href="/admin/crear" />} size="sm" className="gap-2">
+            <HugeiconsIcon icon={Add01Icon} className="h-4 w-4" />Nuevo Artista
           </Button>
         </div>
       </div>
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <HugeiconsIcon icon={Search01Icon} className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Buscar por nombre..." value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-10" />
         </div>
         <div className="flex gap-3">
-          <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setPage(1); }}>
+          <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v ?? "all"); setPage(1); }}>
             <SelectTrigger className="w-[160px]"><SelectValue placeholder="Profesión" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas las profesiones</SelectItem>
               {artistTypes.map((t) => (<SelectItem key={t} value={t}>{t}</SelectItem>))}
             </SelectContent>
           </Select>
-          <Select value={cityFilter} onValueChange={(v) => { setCityFilter(v); setPage(1); }}>
+          <Select value={cityFilter} onValueChange={(v) => { setCityFilter(v ?? "all"); setPage(1); }}>
             <SelectTrigger className="w-[160px]"><SelectValue placeholder="Ciudad" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas las ciudades</SelectItem>
               {cities.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
             </SelectContent>
           </Select>
-          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v ?? "all"); setPage(1); }}>
             <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
@@ -130,7 +134,7 @@ export function ListaContent({ artists }: { artists: Artist[] }) {
         </div>
       </div>
 
-      <div className="rounded-lg border bg-card">
+      <div className="rounded-lg gradient-border-subtle bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -162,18 +166,18 @@ export function ListaContent({ artists }: { artists: Artist[] }) {
                 <TableCell>{artist.city}</TableCell>
                 <TableCell>{formatPrice(artist.price)}</TableCell>
                 <TableCell><StatusBadge status={artist.status} /></TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-end gap-1">
-                    <Button asChild variant="ghost" size="icon" className="h-8 w-8">
-                      <Link href={`/admin/crear?id=${artist.id}`}><Pencil className="h-4 w-4" /></Link>
-                    </Button>
+                 <TableCell>
+                   <div className="flex items-center justify-end gap-1">
+                     <Button nativeButton={false} render={<Link href={`/admin/crear?id=${artist.id}`} />} variant="ghost" size="icon" className="h-8 w-8">
+                       <HugeiconsIcon icon={PencilEdit01Icon} className="h-4 w-4" />
+                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive"
                       onClick={() => setDeleteTarget(artist.id)} disabled={isPending}>
-                      <Trash2 className="h-4 w-4" />
+                      <HugeiconsIcon icon={Delete02Icon} className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8"
                       onClick={() => handleToggle(artist.id, artist.active)} disabled={isPending}>
-                      {artist.active ? (<ToggleRight className="h-4 w-4 text-[var(--success)]" />) : (<ToggleLeft className="h-4 w-4 text-muted-foreground" />)}
+                      {artist.active ? (<HugeiconsIcon icon={ToggleOnIcon} className="h-4 w-4 text-[var(--success)]" />) : (<HugeiconsIcon icon={ToggleOffIcon} className="h-4 w-4 text-muted-foreground" />)}
                     </Button>
                   </div>
                 </TableCell>

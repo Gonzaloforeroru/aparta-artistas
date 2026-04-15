@@ -25,8 +25,8 @@ export function SiteHeader() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem className="hidden md:block">
-              <BreadcrumbLink asChild>
-                <Link href="/admin">Apparta</Link>
+              <BreadcrumbLink render={<Link href="/admin" />}>
+                Apparta
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="hidden md:block" />

@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/data";
 import type { Tables } from "@/lib/supabase/database.types";
 import { approveArtist, rejectArtist } from "@/app/admin/actions";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  CheckCircle,
-  XCircle,
-  MapPin,
-  Clock,
-  MessageCircle,
-} from "lucide-react";
+  CheckmarkCircle01Icon,
+  CancelCircleIcon,
+  Location01Icon,
+  Clock01Icon,
+  BubbleChatIcon,
+} from "@hugeicons/core-free-icons";
 import { InstagramIcon, YoutubeIcon, TikTokIcon, SpotifyIcon } from "@/components/social-icons";
 import Image from "next/image";
 
@@ -56,7 +57,7 @@ function ArtistApprovalCard({ artist }: { artist: Artist }) {
   }
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden gradient-border-subtle">
       <CardContent className="flex flex-col gap-4 p-0 md:flex-row md:gap-0">
         <div className="relative h-48 w-full md:h-auto md:w-48 md:min-h-[220px] shrink-0">
           {artist.photo ? (
@@ -71,16 +72,16 @@ function ArtistApprovalCard({ artist }: { artist: Artist }) {
               <h3 className="text-xl font-bold">{artist.name}</h3>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 <Badge variant="secondary">{artist.type}</Badge>
-                <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{artist.city}</span>
+                <span className="flex items-center gap-1"><HugeiconsIcon icon={Location01Icon} className="h-3.5 w-3.5" />{artist.city}</span>
                 <span>·</span><span>{artist.genre}</span>
               </div>
             </div>
             <Badge className="bg-[var(--warning-bg)] text-[var(--warning)] hover:bg-[var(--warning-bg)]">Pendiente</Badge>
           </div>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-            <span className="flex items-center gap-1.5"><MessageCircle className="h-4 w-4 text-[var(--whatsapp)]" />+57 {artist.phone}</span>
+            <span className="flex items-center gap-1.5"><HugeiconsIcon icon={BubbleChatIcon} className="h-4 w-4 text-[var(--whatsapp)]" />+57 {artist.phone}</span>
             <span className="font-semibold text-foreground">{formatPrice(artist.price)}</span>
-            <span className="flex items-center gap-1 text-muted-foreground"><Clock className="h-3.5 w-3.5" />{artist.duration}</span>
+            <span className="flex items-center gap-1 text-muted-foreground"><HugeiconsIcon icon={Clock01Icon} className="h-3.5 w-3.5" />{artist.duration}</span>
           </div>
           <div className="flex items-center gap-3">
             <SocialLink href={artist.instagram}><InstagramIcon className="h-4 w-4" /></SocialLink>
@@ -91,11 +92,11 @@ function ArtistApprovalCard({ artist }: { artist: Artist }) {
           <div className="flex items-center gap-3 pt-2 border-t">
             <Button onClick={handleApprove} disabled={isPending}
               className="gap-2 bg-[var(--success)] hover:bg-[var(--success-bg)] hover:text-[var(--success)] text-white">
-              <CheckCircle className="h-4 w-4" />Aprobar
+              <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-4 w-4" />Aprobar
             </Button>
             <Button onClick={handleReject} disabled={isPending} variant="outline"
               className="gap-2 text-destructive border-destructive/30 hover:bg-[var(--error-bg)]">
-              <XCircle className="h-4 w-4" />Rechazar
+              <HugeiconsIcon icon={CancelCircleIcon} className="h-4 w-4" />Rechazar
             </Button>
           </div>
         </div>
@@ -113,7 +114,7 @@ export function AprobacionesContent({ artists }: { artists: Artist[] }) {
       </div>
       {artists.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <CheckCircle className="h-12 w-12 text-[var(--success)]" />
+          <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-12 w-12 text-[var(--success)]" />
           <p className="mt-4 text-lg font-medium text-muted-foreground">Sin solicitudes pendientes</p>
           <p className="text-sm text-muted-foreground/70">Todas las solicitudes han sido revisadas</p>
         </div>
