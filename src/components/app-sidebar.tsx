@@ -75,7 +75,7 @@ export function AppSidebar({ user, pendingCount = 0, ...props }: AppSidebarProps
   return (
     <Sidebar 
       collapsible="icon" 
-      className="top-(--header-height) h-[calc(100svh-var(--header-height))]! relative before:absolute before:right-0 before:top-0 before:bottom-0 before:w-[1px] before:bg-gradient-to-b before:from-[#6E2FE3] before:via-[#F31A7C] before:to-[#0CABF7] before:opacity-60"
+      className="top-0 h-full overflow-hidden relative before:absolute before:right-0 before:top-0 before:bottom-0 before:w-[1px] before:bg-gradient-to-b before:from-[#6E2FE3] before:via-[#F31A7C] before:to-[#0CABF7] before:opacity-60"
       {...props}
     >
       <SidebarHeader>

@@ -43,13 +43,13 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="[--header-height:calc(--spacing(14))]">
-      <SidebarProvider className="flex flex-col">
+    <div className="[--header-height:3.5rem] min-h-screen">
+      <SidebarProvider className="flex flex-col min-h-screen">
         <SiteHeader />
-        <div className="flex flex-1">
+        <div className="flex flex-1 overflow-hidden">
           <AppSidebar user={adminUser} pendingCount={pendingCount ?? 0} />
           <SidebarInset>
-            <div className="relative flex-1 overflow-hidden">
+            <div className="relative flex-1 overflow-y-auto overflow-x-hidden">
               <div className="pointer-events-none absolute inset-0 h-full w-full">
                 <div className="absolute -top-[300px] -left-[200px] h-[800px] w-[800px] rounded-full bg-[#6E2FE3] opacity-20 blur-[150px]" />
                 <div className="absolute top-[40%] right-[-100px] h-[600px] w-[600px] rounded-full bg-[#F31A7C] opacity-15 blur-[140px]" />
