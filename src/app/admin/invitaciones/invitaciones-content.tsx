@@ -70,7 +70,7 @@ export function InvitacionesContent({ invitations }: { invitations: Invitation[]
         <p className="text-sm text-muted-foreground">Genera links de registro de un solo uso para artistas</p>
       </div>
 
-      <Card className="gradient-border-subtle">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><HugeiconsIcon icon={Link01Icon} className="size-5 text-primary" />Generar Link de Registro</CardTitle>
           <CardDescription>El link expira en 24 horas y solo se puede usar una vez</CardDescription>
@@ -105,13 +105,13 @@ export function InvitacionesContent({ invitations }: { invitations: Invitation[]
         </CardContent>
       </Card>
 
-       <Card className="gradient-border-subtle">
+       <Card>
          <CardHeader>
            <CardTitle>Historial de Invitaciones</CardTitle>
           <CardDescription>{invitations.length} invitaciones en total</CardDescription>
         </CardHeader>
         <CardContent>
-           <div className="rounded-lg gradient-border-subtle">
+           <div className="rounded-lg">
             <Table>
               <TableHeader>
                 <TableRow>

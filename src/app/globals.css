@@ -222,26 +222,13 @@
     }
 }
 
-/* ── Gradient border utility ─────────────────────────── */
-/* Visible gradient borders as colored lines around components */
-
-/* Strong gradient border for hero/main cards */
-.gradient-border {
-  border: 1px solid transparent;
-  background-image:
-    linear-gradient(var(--gb-bg, var(--background)), var(--gb-bg, var(--background))),
-    linear-gradient(135deg, #6E2FE3 0%, #F31A7C 50%, #0CABF7 100%);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-}
-
-/* Glass card = gradient border + translucent fill + blur */
+/* ── Glass card effect (optional - only use on hero elements) ── */
 .glass-card {
   --gb-bg: rgba(255, 255, 255, 0.92);
   border: 1px solid transparent;
   background-image:
     linear-gradient(var(--gb-bg), var(--gb-bg)),
-    linear-gradient(135deg, #6E2FE3 0%, #F31A7C 50%, #0CABF7 100%);
+    linear-gradient(135deg, rgba(111,47,227,0.15) 0%, rgba(243,26,124,0.12) 50%, rgba(12,171,247,0.1) 100%);
   background-origin: border-box;
   background-clip: padding-box, border-box;
   backdrop-filter: blur(16px) saturate(1.4);
@@ -249,43 +236,4 @@
 
 .dark .glass-card {
   --gb-bg: rgba(19, 21, 23, 0.75);
-}
-
-/* Subtle gradient border for smaller components - more visible gradient */
-.gradient-border-subtle {
-  border: 1px solid transparent;
-  background-image:
-    linear-gradient(var(--gb-bg, var(--background)), var(--gb-bg, var(--background))),
-    linear-gradient(135deg, #6E2FE3 0%, #F31A7C 50%, #0CABF7 100%);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-}
-
-.dark .gradient-border-subtle {
-  --gb-bg: rgba(255, 255, 255, 0.04);
-}
-
-/* ── Card gradient border - make visible like tickets-pass ── */
-[data-slot="card"],
-.card {
-  border: 1px solid transparent;
-  background-image:
-    linear-gradient(var(--card), var(--card)),
-    linear-gradient(135deg, #6E2FE3 0%, #F31A7C 50%, #0CABF7 100%);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-}
-
-/* ── Dashboard content containers with gradient borders ── */
-.admin-content,
-.page-container,
-.section-card,
-.gradient-border-page,
-.table-container {
-  border: 1px solid transparent;
-  background-image:
-    linear-gradient(var(--background), var(--background)),
-    linear-gradient(135deg, #6E2FE3 0%, #F31A7C 50%, #0CABF7 100%);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
 }

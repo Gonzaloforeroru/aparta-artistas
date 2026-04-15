@@ -142,8 +142,8 @@ export default function AdminImportarPage() {
       </div>
 
        {!preview ? (
-         <Card
-           className={`gradient-border-subtle border-2 border-dashed transition-colors ${isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50"}`}
+<Card
+            className={`border-2 border-dashed transition-colors ${isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50"}`}
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFile(e.dataTransfer.files[0]); }}
@@ -168,7 +168,7 @@ export default function AdminImportarPage() {
         </Card>
       ) : (
          <div className="flex flex-col gap-4">
-           <Card className="gradient-border-subtle">
+           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -188,7 +188,7 @@ export default function AdminImportarPage() {
               </div>
             </CardHeader>
             <CardContent>
-               <div className="rounded-lg gradient-border-subtle">
+               <div className="rounded-lg">
                 <Table>
                   <TableHeader>
                     <TableRow>

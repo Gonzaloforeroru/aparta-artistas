@@ -63,7 +63,7 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
 
       <form action={handleSubmit}>
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-           <Card className="h-fit gradient-border-subtle">
+           <Card className="h-fit">
             <CardContent className="flex flex-col items-center gap-4 p-6">
               <Label className="text-sm font-medium">Foto de perfil</Label>
               <label className="flex h-48 w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:border-muted-foreground/50">
@@ -86,7 +86,7 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
             </CardContent>
           </Card>
 
-           <Card className="gradient-border-subtle">
+           <Card>
             <CardContent className="flex flex-col gap-6 p-6">
               <div className="flex flex-col gap-4">
                 <p className="text-sm font-semibold">Datos Principales</p>

@@ -54,11 +54,7 @@ export default async function AdminLayout({
                 <div className="absolute -top-[200px] -right-[200px] h-[500px] w-[500px] rounded-full bg-[#6E2FE3] opacity-[0.06] blur-[150px]" />
                 <div className="absolute bottom-[20%] left-[10%] h-[400px] w-[400px] rounded-full bg-[#0CABF7] opacity-[0.04] blur-[130px]" />
               </div>
-              <div className="relative z-10 p-6">
-                <div className="rounded-xl border border-transparent bg-background gradient-border-page p-6">
-                  {children}
-                </div>
-              </div>
+              <div className="relative z-10">{children}</div>
             </div>
           </SidebarInset>
         </div>

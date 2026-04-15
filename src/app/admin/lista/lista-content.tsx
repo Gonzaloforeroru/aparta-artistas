@@ -134,7 +134,7 @@ export function ListaContent({ artists }: { artists: Artist[] }) {
         </div>
       </div>
 
-      <div className="rounded-xl table-container bg-card p-0 overflow-hidden">
+      <div className="rounded-xl bg-card p-0 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

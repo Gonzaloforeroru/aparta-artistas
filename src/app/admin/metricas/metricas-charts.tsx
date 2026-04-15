@@ -172,7 +172,7 @@ export function MetricasCharts({ artists }: { artists: Artist[] }) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-         <Card className="gradient-border-subtle">
+         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               <div className="flex size-8 items-center justify-center rounded-lg bg-chart-1/10">
@@ -227,7 +227,7 @@ export function MetricasCharts({ artists }: { artists: Artist[] }) {
           </CardContent>
          </Card>
 
-         <Card className="gradient-border-subtle">
+         <Card>
            <CardHeader>
              <div className="flex items-center gap-2">
                <div className="flex size-8 items-center justify-center rounded-lg bg-chart-2/10">
@@ -298,7 +298,7 @@ export function MetricasCharts({ artists }: { artists: Artist[] }) {
            </CardContent>
          </Card>
 
-         <Card className="gradient-border-subtle">
+         <Card>
            <CardHeader>
              <div className="flex items-center gap-2">
                <div className="flex size-8 items-center justify-center rounded-lg bg-chart-3/10">
@@ -357,7 +357,7 @@ export function MetricasCharts({ artists }: { artists: Artist[] }) {
            </CardContent>
          </Card>
 
-         <Card className="gradient-border-subtle">
+         <Card>
            <CardHeader>
              <div className="flex items-center gap-2">
                <div className="flex size-8 items-center justify-center rounded-lg bg-chart-4/10">
@@ -459,7 +459,7 @@ export function MetricasCharts({ artists }: { artists: Artist[] }) {
            </CardContent>
          </Card>
 
-         <Card className="gradient-border-subtle">
+         <Card>
            <CardHeader>
              <div className="flex items-center gap-2">
                <div className="flex size-8 items-center justify-center rounded-lg bg-chart-5/10">
@@ -548,7 +548,7 @@ export function MetricasCharts({ artists }: { artists: Artist[] }) {
            </CardContent>
          </Card>
 
-         <Card className="gradient-border-subtle">
+         <Card>
            <CardHeader>
              <div className="flex items-center gap-2">
                <div className="flex size-8 items-center justify-center rounded-lg bg-chart-1/10">

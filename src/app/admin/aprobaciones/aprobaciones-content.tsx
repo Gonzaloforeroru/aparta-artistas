@@ -57,7 +57,7 @@ function ArtistApprovalCard({ artist }: { artist: Artist }) {
   }
 
   return (
-    <Card className="overflow-hidden gradient-border-subtle">
+    <Card className="overflow-hidden">
       <CardContent className="flex flex-col gap-4 p-0 md:flex-row md:gap-0">
         <div className="relative h-48 w-full md:h-auto md:w-48 md:min-h-[220px] shrink-0">
           {artist.photo ? (
