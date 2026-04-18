@@ -19,25 +19,26 @@ export async function createArtist(formData: FormData) {
   const photoFile = formData.get("photo") as File | null;
 
   // Insert artist first (to get ID for photo path)
-  const { data: artistData, error } = await supabase
-    .from("artists")
-    .insert({
-      name: formData.get("name") as string,
-      city: formData.get("city") as string,
-      type: formData.get("type") as ArtistType,
-      genre: formData.get("genre") as Genre,
-      phone: formData.get("phone") as string,
-      price: parseInt(formData.get("price") as string) || 0,
-      duration: formData.get("duration") as string,
-      status: (formData.get("status") as ArtistStatus) ?? "Aprobado",
-      instagram: (formData.get("instagram") as string) || null,
-      tiktok: (formData.get("tiktok") as string) || null,
-      youtube: (formData.get("youtube") as string) || null,
-      spotify: (formData.get("spotify") as string) || null,
-      created_by: user?.id,
-    })
-    .select()
-    .single();
+   const { data: artistData, error } = await supabase
+     .from("artists")
+     .insert({
+       name: formData.get("name") as string,
+       email: (formData.get("email") as string) || null,
+       city: formData.get("city") as string,
+       type: formData.get("type") as ArtistType,
+       genre: formData.get("genre") as Genre,
+       phone: formData.get("phone") as string,
+       price: parseInt(formData.get("price") as string) || 0,
+       duration: formData.get("duration") as string,
+       status: (formData.get("status") as ArtistStatus) ?? "Aprobado",
+       instagram: (formData.get("instagram") as string) || null,
+       tiktok: (formData.get("tiktok") as string) || null,
+       youtube: (formData.get("youtube") as string) || null,
+       spotify: (formData.get("spotify") as string) || null,
+       created_by: user?.id,
+     })
+     .select()
+     .single();
 
   if (error) throw error;
 
@@ -82,24 +83,25 @@ export async function updateArtist(id: string, formData: FormData) {
     }
   }
 
-  const { error } = await supabase
-    .from("artists")
-    .update({
-      name: formData.get("name") as string,
-      city: formData.get("city") as string,
-      type: formData.get("type") as ArtistType,
-      genre: formData.get("genre") as Genre,
-      phone: formData.get("phone") as string,
-      price: parseInt(formData.get("price") as string) || 0,
-      duration: formData.get("duration") as string,
-      status: formData.get("status") as ArtistStatus,
-      instagram: (formData.get("instagram") as string) || null,
-      tiktok: (formData.get("tiktok") as string) || null,
-      youtube: (formData.get("youtube") as string) || null,
-      spotify: (formData.get("spotify") as string) || null,
-      photo: photoUrl,
-    })
-    .eq("id", id);
+   const { error } = await supabase
+     .from("artists")
+     .update({
+       name: formData.get("name") as string,
+       email: (formData.get("email") as string) || null,
+       city: formData.get("city") as string,
+       type: formData.get("type") as ArtistType,
+       genre: formData.get("genre") as Genre,
+       phone: formData.get("phone") as string,
+       price: parseInt(formData.get("price") as string) || 0,
+       duration: formData.get("duration") as string,
+       status: formData.get("status") as ArtistStatus,
+       instagram: (formData.get("instagram") as string) || null,
+       tiktok: (formData.get("tiktok") as string) || null,
+       youtube: (formData.get("youtube") as string) || null,
+       spotify: (formData.get("spotify") as string) || null,
+       photo: photoUrl,
+     })
+     .eq("id", id);
 
   if (error) throw error;
   revalidatePath("/admin/lista");

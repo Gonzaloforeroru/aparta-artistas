@@ -91,17 +91,21 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
               <div className="flex flex-col gap-4">
                 <p className="text-sm font-semibold">Datos Principales</p>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="name">Nombre <span className="text-destructive">*</span></Label>
-                    <Input id="name" name="name" placeholder="Nombre artístico o real" defaultValue={existingArtist?.name ?? ""} required />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label>Ciudad <span className="text-destructive">*</span></Label>
-                    <Select name="city" defaultValue={existingArtist?.city ?? ""} required>
-                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                      <SelectContent>{cities.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}</SelectContent>
-                    </Select>
-                  </div>
+                   <div className="flex flex-col gap-2">
+                     <Label htmlFor="name">Nombre <span className="text-destructive">*</span></Label>
+                     <Input id="name" name="name" placeholder="Nombre artístico o real" defaultValue={existingArtist?.name ?? ""} required />
+                   </div>
+                   <div className="flex flex-col gap-2">
+                     <Label htmlFor="email">Correo electrónico <span className="text-destructive">*</span></Label>
+                     <Input id="email" name="email" type="email" placeholder="artista@ejemplo.com" defaultValue={existingArtist?.email ?? ""} required />
+                   </div>
+                   <div className="flex flex-col gap-2">
+                     <Label>Ciudad <span className="text-destructive">*</span></Label>
+                     <Select name="city" defaultValue={existingArtist?.city ?? ""} required>
+                       <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                       <SelectContent>{cities.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}</SelectContent>
+                     </Select>
+                   </div>
                   <div className="flex flex-col gap-2">
                     <Label>Profesión <span className="text-destructive">*</span></Label>
                     <Select name="type" defaultValue={existingArtist?.type ?? ""} required>
