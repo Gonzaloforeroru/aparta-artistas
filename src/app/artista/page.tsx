@@ -122,9 +122,9 @@ export default async function ArtistaProfilePage() {
       </div>
 
       {/* Profile card */}
-      <Card className="overflow-hidden border-0 gradient-border-subtle bg-[var(--elevated)]">
-        <CardContent className="p-0">
-          <div className="flex flex-col md:flex-row">
+      <Card className="border-0 gradient-border-subtle bg-[var(--elevated)]">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:gap-6">
             {/* LEFT — Photo */}
             <div className="relative aspect-square w-full overflow-hidden rounded-2xl md:aspect-auto md:w-80 lg:w-96">
               {artist.photo ? (
@@ -146,7 +146,7 @@ export default async function ArtistaProfilePage() {
             </div>
 
             {/* RIGHT — Details */}
-            <div className="flex flex-1 flex-col gap-6 p-6 sm:p-8">
+            <div className="flex flex-1 flex-col gap-6">
               {/* Name + Status */}
               <div>
                 <div className="flex flex-wrap items-center gap-3">
