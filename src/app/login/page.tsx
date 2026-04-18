@@ -4,7 +4,14 @@ import { MusicNote02Icon } from "@hugeicons/core-free-icons";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import Link from "next/link";
 
-export default function LoginPage() {
+interface LoginPageProps {
+  searchParams: Promise<{ token?: string }>;
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
+  const token = params.token;
+
   return (
     <div className="relative flex min-h-svh items-center justify-center overflow-hidden bg-background px-4 py-8">
       {/* Gradient blobs */}
@@ -26,13 +33,13 @@ export default function LoginPage() {
               Apparta
             </h1>
             <p className="mt-1 text-sm text-[var(--text-tertiary)]">
-              Inicia sesión o explora el catálogo
+              Inicia sesión con tu cuenta de Google para continuar
             </p>
           </div>
         </div>
 
         {/* Google sign in */}
-        <GoogleSignInButton />
+        <GoogleSignInButton token={token} />
 
         {/* Divider */}
         <div className="flex items-center gap-3">
@@ -50,9 +57,7 @@ export default function LoginPage() {
           </Button>
         </Link>
 
-        <p className="text-center text-[11px] text-[var(--text-muted)]">
-          Acceso exclusivo para administradores
-        </p>
+
       </div>
     </div>
   );

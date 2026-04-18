@@ -26,9 +26,17 @@ function GoogleIcon() {
   );
 }
 
-export function GoogleSignInButton() {
+interface GoogleSignInButtonProps {
+  token?: string;
+}
+
+export function GoogleSignInButton({ token }: GoogleSignInButtonProps) {
+  const handleSignIn = async () => {
+    await signInWithGoogle(token);
+  };
+
   return (
-    <form action={signInWithGoogle}>
+    <form action={handleSignIn}>
       <Button
         type="submit"
         variant="outline"
