@@ -12,6 +12,7 @@ function mockBuilder(
     select: vi.fn(),
     insert: vi.fn(),
     update: vi.fn(),
+    upsert: vi.fn(),
     eq: vi.fn(),
     ilike: vi.fn(),
     is: vi.fn(),
@@ -23,6 +24,7 @@ function mockBuilder(
   b.select.mockReturnValue(b);
   b.insert.mockReturnValue(b);
   b.update.mockReturnValue(b);
+  b.upsert.mockResolvedValue({ data: null, error: null });
   b.eq.mockReturnValue(b);
   b.ilike.mockReturnValue(b);
   b.is.mockReturnValue(b);
@@ -106,21 +108,25 @@ describe("handlePostLogin", () => {
   it("sets admin role and redirects to /admin for admin email", async () => {
     process.env.ADMIN_EMAIL = "admin@test.com";
 
-    const profileBuilder = mockBuilder();
-    const adminClient = makeMockClient(profileBuilder);
+    const profileUpsertBuilder = mockBuilder();
+    const adminClient = makeMockClient(profileUpsertBuilder);
     const user = mockUser({ email: "admin@test.com" });
 
     const result = await handlePostLogin(stubSupabase, adminClient, user);
 
     expect(result.redirectTo).toBe("/admin");
     expect(adminClient.from).toHaveBeenCalledWith("profiles");
-    expect(profileBuilder.update).toHaveBeenCalledWith({ role: "admin" });
-    expect(profileBuilder.eq).toHaveBeenCalledWith("id", "user-123");
+    expect(profileUpsertBuilder.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "user-123", role: "admin" }),
+      { onConflict: "id" }
+    );
   });
 
   it("links auth user to existing artist found by email", async () => {
     process.env.ADMIN_EMAIL = "admin@other.com";
 
+    // Step 0: profile upsert
+    const profileUpsertBuilder = mockBuilder();
     // 1st from("artists") → select + ilike → found
     const selectBuilder = mockBuilder({
       data: { id: "artist-456" },
@@ -129,7 +135,7 @@ describe("handlePostLogin", () => {
     // 2nd from("artists") → update user_id
     const updateBuilder = mockBuilder();
 
-    const adminClient = makeMockClient(selectBuilder, updateBuilder);
+    const adminClient = makeMockClient(profileUpsertBuilder, selectBuilder, updateBuilder);
     const user = mockUser({ email: "existing@artist.com" });
 
     const result = await handlePostLogin(stubSupabase, adminClient, user);
@@ -148,12 +154,14 @@ describe("handlePostLogin", () => {
   it("creates new artist record when no email match", async () => {
     process.env.ADMIN_EMAIL = "admin@other.com";
 
+    // Step 0: profile upsert
+    const profileUpsertBuilder = mockBuilder();
     // 1st from("artists") → select + ilike → not found
     const selectBuilder = mockBuilder({ data: null, error: null });
     // 2nd from("artists") → insert
     const insertBuilder = mockBuilder();
 
-    const adminClient = makeMockClient(selectBuilder, insertBuilder);
+    const adminClient = makeMockClient(profileUpsertBuilder, selectBuilder, insertBuilder);
     const user = mockUser({ email: "new@artist.com" });
 
     const result = await handlePostLogin(stubSupabase, adminClient, user);
@@ -172,9 +180,10 @@ describe("handlePostLogin", () => {
   it("uses email prefix as name when user_metadata has no full_name", async () => {
     process.env.ADMIN_EMAIL = "admin@other.com";
 
+    const profileUpsertBuilder = mockBuilder();
     const selectBuilder = mockBuilder({ data: null, error: null });
     const insertBuilder = mockBuilder();
-    const adminClient = makeMockClient(selectBuilder, insertBuilder);
+    const adminClient = makeMockClient(profileUpsertBuilder, selectBuilder, insertBuilder);
     const user = mockUser({
       email: "noname@example.com",
       user_metadata: {},
@@ -201,6 +210,8 @@ describe("handlePostLogin", () => {
   it("validates and associates invitation token", async () => {
     process.env.ADMIN_EMAIL = "admin@other.com";
 
+    // Step 0: profile upsert
+    const profileUpsertBuilder = mockBuilder();
     // 1st: artist email select (no match)
     const artistSelectBuilder = mockBuilder({ data: null, error: null });
     // 2nd: artist insert (new record)
@@ -221,6 +232,7 @@ describe("handlePostLogin", () => {
     const invitationUpdateBuilder = mockBuilder();
 
     const adminClient = makeMockClient(
+      profileUpsertBuilder,
       artistSelectBuilder,
       artistInsertBuilder,
       invitationSelectBuilder,
@@ -259,6 +271,8 @@ describe("handlePostLogin", () => {
   it("skips token association when invitation is expired/used", async () => {
     process.env.ADMIN_EMAIL = "admin@other.com";
 
+    // Step 0: profile upsert
+    const profileUpsertBuilder = mockBuilder();
     // 1st: artist email select (no match)
     const artistSelectBuilder = mockBuilder({ data: null, error: null });
     // 2nd: artist insert
@@ -267,6 +281,7 @@ describe("handlePostLogin", () => {
     const invitationSelectBuilder = mockBuilder({ data: null, error: null });
 
     const adminClient = makeMockClient(
+      profileUpsertBuilder,
       artistSelectBuilder,
       artistInsertBuilder,
       invitationSelectBuilder
@@ -281,7 +296,7 @@ describe("handlePostLogin", () => {
     );
 
     expect(result.redirectTo).toBe("/artista");
-    // Should only have 3 from() calls: artist select, artist insert, invitation check
-    expect(adminClient.from).toHaveBeenCalledTimes(3);
+    // 4 from() calls: profile upsert, artist select, artist insert, invitation check
+    expect(adminClient.from).toHaveBeenCalledTimes(4);
   });
 });

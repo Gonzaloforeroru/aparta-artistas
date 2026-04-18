@@ -33,13 +33,22 @@ export async function handlePostLogin(
     return { redirectTo: "/login?error=no_email" };
   }
 
-  // Step 1: Admin email check → set role in profiles
-  if (isAdminEmail(email)) {
-    await adminClient
-      .from("profiles")
-      .update({ role: "admin" })
-      .eq("id", user.id);
+  // Step 0: Ensure profile exists (handles users created before trigger was set up)
+  await adminClient.from("profiles").upsert(
+    {
+      id: user.id,
+      role: isAdminEmail(email) ? "admin" : "artist",
+      display_name:
+        (user.user_metadata?.full_name as string | undefined) ??
+        email.split("@")[0],
+      avatar_url: (user.user_metadata?.avatar_url as string | undefined) ?? null,
+    },
+    { onConflict: "id" }
+  );
 
+  // Step 1: Admin email check → redirect to admin
+  if (isAdminEmail(email)) {
+    // Profile already upserted with role='admin' above
     return { redirectTo: "/admin" };
   }
 
