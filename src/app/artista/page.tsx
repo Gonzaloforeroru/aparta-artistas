@@ -126,18 +126,18 @@ export default async function ArtistaProfilePage() {
         <CardContent className="p-0">
           <div className="flex flex-col md:flex-row">
             {/* LEFT — Photo */}
-            <div className="relative aspect-square w-full md:aspect-auto md:w-80 lg:w-96">
+            <div className="relative aspect-square w-full overflow-hidden rounded-2xl md:aspect-auto md:w-80 lg:w-96">
               {artist.photo ? (
                 <Image
                   src={artist.photo}
                   alt={artist.name}
                   fill
-                  className="object-cover"
+                  className="rounded-2xl object-cover"
                   sizes="(max-width: 768px) 100vw, 384px"
                   priority
                 />
               ) : (
-                <div className="flex size-full min-h-64 items-center justify-center bg-[var(--surface-3)]">
+                <div className="flex size-full min-h-64 items-center justify-center rounded-2xl bg-[var(--surface-3)]">
                   <span className="text-7xl font-bold text-[var(--text-muted)]">
                     {artist.name.charAt(0)}
                   </span>
