@@ -284,17 +284,30 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
 
             <Separator />
 
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="h-11 w-full font-semibold"
-            >
-              {isPending
-                ? "Guardando..."
-                : mode === "completar"
-                  ? "Completar perfil"
-                  : "Guardar cambios"}
-            </Button>
+            <div className="flex gap-3">
+              {mode === "editar" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 flex-1 font-semibold"
+                  onClick={() => router.push("/artista")}
+                  disabled={isPending}
+                >
+                  Cancelar
+                </Button>
+              )}
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="h-11 flex-1 font-semibold"
+              >
+                {isPending
+                  ? "Guardando..."
+                  : mode === "completar"
+                    ? "Completar perfil"
+                    : "Guardar cambios"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
