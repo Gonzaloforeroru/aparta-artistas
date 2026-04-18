@@ -46,9 +46,15 @@ export async function handlePostLogin(
     { onConflict: "id" }
   );
 
-  // Step 1: Admin email check → redirect to admin
+  // Step 1: Admin email check → ensure single admin, redirect
   if (isAdminEmail(email)) {
-    // Profile already upserted with role='admin' above
+    // Downgrade any previous admins (only one admin allowed at a time)
+    await adminClient
+      .from("profiles")
+      .update({ role: "artist" })
+      .eq("role", "admin")
+      .neq("id", user.id);
+
     return { redirectTo: "/admin" };
   }
 

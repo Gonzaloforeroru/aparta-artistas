@@ -14,6 +14,7 @@ function mockBuilder(
     update: vi.fn(),
     upsert: vi.fn(),
     eq: vi.fn(),
+    neq: vi.fn(),
     ilike: vi.fn(),
     is: vi.fn(),
     gt: vi.fn(),
@@ -26,6 +27,7 @@ function mockBuilder(
   b.update.mockReturnValue(b);
   b.upsert.mockResolvedValue({ data: null, error: null });
   b.eq.mockReturnValue(b);
+  b.neq.mockReturnValue(b);
   b.ilike.mockReturnValue(b);
   b.is.mockReturnValue(b);
   b.gt.mockReturnValue(b);
@@ -109,7 +111,8 @@ describe("handlePostLogin", () => {
     process.env.ADMIN_EMAIL = "admin@test.com";
 
     const profileUpsertBuilder = mockBuilder();
-    const adminClient = makeMockClient(profileUpsertBuilder);
+    const downgradeBuilder = mockBuilder(); // Step 1: downgrade previous admins
+    const adminClient = makeMockClient(profileUpsertBuilder, downgradeBuilder);
     const user = mockUser({ email: "admin@test.com" });
 
     const result = await handlePostLogin(stubSupabase, adminClient, user);
@@ -120,6 +123,8 @@ describe("handlePostLogin", () => {
       expect.objectContaining({ id: "user-123", role: "admin" }),
       { onConflict: "id" }
     );
+    // Verify previous admins get downgraded
+    expect(downgradeBuilder.update).toHaveBeenCalledWith({ role: "artist" });
   });
 
   it("links auth user to existing artist found by email", async () => {
