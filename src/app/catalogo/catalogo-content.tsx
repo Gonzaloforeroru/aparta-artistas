@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cities, artistTypes, genres, formatPrice } from "@/lib/data";
+import { Slider } from "@/components/ui/slider";
+import { cities, genres, formatPrice, DURATION_OPTIONS, COST_SLIDER_CONFIG } from "@/lib/data";
 import type { Tables } from "@/lib/supabase/database.types";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -20,48 +21,11 @@ import {
   Location01Icon,
   Cancel01Icon,
 } from "@hugeicons/core-free-icons";
-import {
-  InstagramIcon,
-  YoutubeIcon,
-  TikTokIcon,
-  SpotifyIcon,
-} from "@/components/social-icons";
+import { YoutubeIcon } from "@/components/social-icons";
 import Image from "next/image";
 
 type Artist = Tables<"artists">;
 
-/* ── Type icons & emoji mapping ────────────────────────── */
-
-const TYPE_EMOJI: Record<string, string> = {
-  Cantante: "🎤",
-  DJ: "🎧",
-  Banda: "🎸",
-  Mariachi: "🎺",
-  "Grupo Musical": "🎵",
-  Solista: "🎙️",
-};
-
-/* ── Social link ───────────────────────────────────────── */
-
-function SocialLink({
-  href,
-  children,
-}: {
-  href?: string | null;
-  children: React.ReactNode;
-}) {
-  if (!href) return null;
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-[var(--text-muted)] transition-colors hover:text-foreground"
-    >
-      {children}
-    </a>
-  );
-}
 
 /* ── Artist card ───────────────────────────────────────── */
 
@@ -109,71 +73,37 @@ function ArtistCard({ artist }: { artist: Artist }) {
           </span>
         </div>
 
-        {/* Socials */}
-        <div className="flex items-center gap-3">
-          <SocialLink href={artist.instagram}>
-            <InstagramIcon className="size-4" />
-          </SocialLink>
-          <SocialLink href={artist.tiktok}>
-            <TikTokIcon className="size-4" />
-          </SocialLink>
-          <SocialLink href={artist.youtube}>
-            <YoutubeIcon className="size-4" />
-          </SocialLink>
-          <SocialLink href={artist.spotify}>
-            <SpotifyIcon className="size-4" />
-          </SocialLink>
+        {/* CTA Buttons */}
+        <div className="mt-auto flex gap-2">
+          {artist.phone && (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={artist.youtube ? "flex-1" : "w-full"}
+            >
+              <Button className="w-full gap-2 rounded-full bg-[var(--whatsapp)] text-white font-medium hover:bg-[var(--whatsapp-hover)]">
+                <HugeiconsIcon icon={BubbleChatIcon} className="size-4" />
+                Contactar
+              </Button>
+            </a>
+          )}
+          {artist.youtube && (
+            <a
+              href={artist.youtube}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={artist.phone ? "flex-1" : "w-full"}
+            >
+              <Button className="w-full gap-2 rounded-full bg-red-600 text-white font-medium hover:bg-red-700">
+                <YoutubeIcon className="size-4" />
+                YouTube
+              </Button>
+            </a>
+          )}
         </div>
-
-        {/* CTA */}
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-auto"
-        >
-          <Button className="w-full gap-2 rounded-full bg-[var(--whatsapp)] text-white font-medium hover:bg-[var(--whatsapp-hover)]">
-            <HugeiconsIcon icon={BubbleChatIcon} className="size-4" />
-            Contactar
-          </Button>
-        </a>
       </div>
     </div>
-  );
-}
-
-/* ── Category card (clickable filter) ──────────────────── */
-
-function CategoryCard({
-  type,
-  count,
-  active,
-  onClick,
-}: {
-  type: string;
-  count: number;
-  active: boolean;
-  onClick: () => void;
-}) {
-  const emoji = TYPE_EMOJI[type] ?? "🎵";
-
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors ${
-        active
-          ? "border border-[var(--cta)]/40 bg-[var(--cta)]/10"
-          : "gradient-border-subtle bg-[var(--elevated)] hover:bg-[var(--card-hover)]"
-      }`}
-    >
-      <span className="text-xl">{emoji}</span>
-      <div className="min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">{type}</p>
-        <p className="text-xs text-[var(--text-muted)]">
-          {count} artista{count !== 1 ? "s" : ""}
-        </p>
-      </div>
-    </button>
   );
 }
 
@@ -208,33 +138,33 @@ function GenrePill({
 export function CatalogoContent({ artists }: { artists: Artist[] }) {
   const [search, setSearch] = useState("");
   const [cityFilter, setCityFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
+  const [durationFilter, setDurationFilter] = useState("all");
   const [genreFilter, setGenreFilter] = useState("all");
-
-  /* Count artists per type */
-  const typeCounts = useMemo(() => {
-    const map = new Map<string, number>();
-    artists.forEach((a) => map.set(a.type, (map.get(a.type) ?? 0) + 1));
-    return map;
-  }, [artists]);
+  const [priceRange, setPriceRange] = useState<number[]>([COST_SLIDER_CONFIG.min, COST_SLIDER_CONFIG.max]);
 
   const filtered = artists.filter((artist) => {
     const matchesSearch = artist.name
       .toLowerCase()
       .includes(search.toLowerCase());
     const matchesCity = cityFilter === "all" || artist.city === cityFilter;
-    const matchesType = typeFilter === "all" || artist.type === typeFilter;
+    const matchesDuration = durationFilter === "all" || artist.duration === durationFilter;
     const matchesGenre = genreFilter === "all" || artist.genre === genreFilter;
-    return matchesSearch && matchesCity && matchesType && matchesGenre;
+    const matchesPrice = artist.price >= priceRange[0] && artist.price <= priceRange[1];
+    return matchesSearch && matchesCity && matchesDuration && matchesGenre && matchesPrice;
   });
 
   const hasActiveFilters =
-    cityFilter !== "all" || typeFilter !== "all" || genreFilter !== "all";
+    cityFilter !== "all" ||
+    durationFilter !== "all" ||
+    genreFilter !== "all" ||
+    priceRange[0] !== COST_SLIDER_CONFIG.min ||
+    priceRange[1] !== COST_SLIDER_CONFIG.max;
 
   function clearFilters() {
     setCityFilter("all");
-    setTypeFilter("all");
+    setDurationFilter("all");
     setGenreFilter("all");
+    setPriceRange([COST_SLIDER_CONFIG.min, COST_SLIDER_CONFIG.max]);
     setSearch("");
   }
 
@@ -285,23 +215,46 @@ export function CatalogoContent({ artists }: { artists: Artist[] }) {
             ))}
           </SelectContent>
         </Select>
+        <Select
+          value={durationFilter}
+          onValueChange={(v) => setDurationFilter(v ?? "all")}
+        >
+          <SelectTrigger className="h-11 w-full rounded-full gradient-border-subtle bg-[var(--elevated)] sm:w-44">
+            <HugeiconsIcon
+              icon={Clock01Icon}
+              className="mr-1.5 size-4 text-[var(--text-muted)]"
+            />
+            <SelectValue placeholder="Duración" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas</SelectItem>
+            {DURATION_OPTIONS.map((d) => (
+              <SelectItem key={d} value={d}>
+                {d}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* ── Categorías (type filter cards) ───────────── */}
+      {/* ── Rango de precio (cost slider) ────────────── */}
       <div className="mb-6">
         <p className="mb-3 text-xs font-medium uppercase tracking-widest text-[var(--text-muted)]">
-          Categorías
+          Rango de precio
         </p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {artistTypes.map((t) => (
-            <CategoryCard
-              key={t}
-              type={t}
-              count={typeCounts.get(t) ?? 0}
-              active={typeFilter === t}
-              onClick={() => setTypeFilter(typeFilter === t ? "all" : t)}
-            />
-          ))}
+        <div className="rounded-2xl gradient-border-subtle bg-[var(--elevated)] px-5 py-4">
+          <Slider
+            value={priceRange}
+            onValueChange={(val) => setPriceRange(val as number[])}
+            min={COST_SLIDER_CONFIG.min}
+            max={COST_SLIDER_CONFIG.max}
+            step={COST_SLIDER_CONFIG.step}
+          />
+          <div className="mt-3 flex items-center justify-between text-sm text-[var(--text-muted)]">
+            <span>{formatPrice(priceRange[0])}</span>
+            <span>—</span>
+            <span>{formatPrice(priceRange[1])}</span>
+          </div>
         </div>
       </div>
 
