@@ -1,16 +1,26 @@
-import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MusicNote02Icon } from "@hugeicons/core-free-icons";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { LoginForm } from "@/app/login/login-form";
 import Link from "next/link";
 
+const errorMessages: Record<string, string> = {
+  invalid_credentials: "Correo o contraseña incorrectos",
+  oauth_failed: "Error al iniciar sesión con Google",
+  oauth_cancelled: "Inicio de sesión cancelado",
+  oauth_exchange_failed: "Error al procesar la autenticación",
+  no_user: "No se pudo obtener la información del usuario",
+  no_email: "Tu cuenta no tiene un correo electrónico asociado",
+};
+
 interface LoginPageProps {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ token?: string; error?: string }>;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const token = params.token;
+  const error = params.error;
 
   return (
     <div className="relative flex min-h-svh items-center justify-center overflow-hidden bg-background px-4 py-8">
@@ -33,10 +43,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               Apparta
             </h1>
             <p className="mt-1 text-sm text-[var(--text-tertiary)]">
-              Inicia sesión con tu cuenta de Google para continuar
+              Inicia sesión para continuar
             </p>
           </div>
         </div>
+
+        {/* Error message */}
+        {error && errorMessages[error] && (
+          <div className="rounded-lg bg-[var(--error-bg)] px-4 py-3 text-sm text-[var(--error)]">
+            {errorMessages[error]}
+          </div>
+        )}
 
         {/* Google sign in */}
         <GoogleSignInButton token={token} />
@@ -45,19 +62,24 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-[var(--border-subtle)]" />
           <span className="text-[11px] uppercase text-[var(--text-muted)]">
-            o explora
+            o inicia sesión con tu correo
           </span>
           <div className="h-px flex-1 bg-[var(--border-subtle)]" />
         </div>
 
-        {/* Explore link */}
-        <Link href="/catalogo">
-          <Button variant="outline" className="h-10 w-full">
-            Ver catálogo de artistas
-          </Button>
-        </Link>
+        {/* Email/password form */}
+        <LoginForm token={token} />
 
-
+        {/* Register link */}
+        <p className="text-center text-sm text-[var(--text-tertiary)]">
+          ¿No tienes cuenta?{" "}
+          <Link
+            href="/registro"
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+          >
+            Regístrate
+          </Link>
+        </p>
       </div>
     </div>
   );
