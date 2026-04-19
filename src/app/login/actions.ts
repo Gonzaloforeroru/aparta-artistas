@@ -78,7 +78,19 @@ export async function signUpWithEmail(formData: FormData) {
   });
 
   if (error) {
-    redirect("/registro?error=signup_failed");
+    console.error("[signUpWithEmail] Error:", error.message, error.status);
+    const errorType =
+      error.message?.includes("already registered")
+        ? "already_registered"
+        : error.message?.includes("password")
+          ? "weak_password"
+          : "signup_failed";
+    redirect(`/registro?error=${errorType}`);
+  }
+
+  // Supabase returns user with empty identities if email already exists (security measure)
+  if (data.user && data.user.identities?.length === 0) {
+    redirect("/registro?error=already_registered");
   }
 
   // If auto-confirmed (session exists), run post-login flow immediately

@@ -6,6 +6,8 @@ import Link from "next/link";
 
 const errorMessages: Record<string, string> = {
   signup_failed: "Error al crear la cuenta. Intenta de nuevo.",
+  already_registered: "Este correo ya está registrado. Intenta iniciar sesión.",
+  weak_password: "La contraseña debe tener al menos 6 caracteres.",
 };
 
 interface RegistroPageProps {
