@@ -9,7 +9,9 @@ const errorMessages: Record<string, string> = {
   invalid_credentials: "Correo o contraseña incorrectos",
   oauth_failed: "Error al iniciar sesión con Google",
   oauth_cancelled: "Inicio de sesión cancelado",
-  oauth_exchange_failed: "Error al procesar la autenticación",
+  oauth_exchange_failed: "Error al procesar la autenticación. Intenta de nuevo.",
+  confirm_failed: "El enlace de confirmación es inválido o ha expirado. Regístrate de nuevo.",
+  missing_token: "Enlace de confirmación incompleto.",
   no_user: "No se pudo obtener la información del usuario",
   no_email: "Tu cuenta no tiene un correo electrónico asociado",
 };
