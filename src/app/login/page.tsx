@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MusicNote02Icon } from "@hugeicons/core-free-icons";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
@@ -80,6 +81,22 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             Regístrate
           </Link>
         </p>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-[var(--border-subtle)]" />
+          <span className="text-[11px] uppercase text-[var(--text-muted)]">
+            o explora
+          </span>
+          <div className="h-px flex-1 bg-[var(--border-subtle)]" />
+        </div>
+
+        {/* Explore link */}
+        <Link href="/catalogo">
+          <Button variant="outline" className="h-10 w-full">
+            Ver catálogo de artistas
+          </Button>
+        </Link>
       </div>
     </div>
   );
