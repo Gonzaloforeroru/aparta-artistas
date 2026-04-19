@@ -22,7 +22,10 @@ export function RegistroEmailForm() {
     }
 
     startTransition(async () => {
-      await signUpWithEmail(formData);
+      const result = await signUpWithEmail(formData);
+      if (result?.error) {
+        setLocalError(result.error);
+      }
     });
   }
 

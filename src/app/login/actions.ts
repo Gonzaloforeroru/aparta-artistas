@@ -78,19 +78,17 @@ export async function signUpWithEmail(formData: FormData) {
   });
 
   if (error) {
-    console.error("[signUpWithEmail] Error:", error.message, error.status);
-    const errorType =
-      error.message?.includes("already registered")
-        ? "already_registered"
-        : error.message?.includes("password")
-          ? "weak_password"
-          : "signup_failed";
-    redirect(`/registro?error=${errorType}`);
+    const message = error.message?.includes("already registered")
+      ? "Este correo ya está registrado. Intenta iniciar sesión."
+      : error.message?.includes("password")
+        ? "La contraseña debe tener al menos 6 caracteres."
+        : "Error al crear la cuenta. Intenta de nuevo.";
+    return { error: message };
   }
 
   // Supabase returns user with empty identities if email already exists (security measure)
   if (data.user && data.user.identities?.length === 0) {
-    redirect("/registro?error=already_registered");
+    return { error: "Este correo ya está registrado. Intenta iniciar sesión." };
   }
 
   // If auto-confirmed (session exists), run post-login flow immediately
