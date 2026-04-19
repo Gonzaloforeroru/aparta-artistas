@@ -1,5 +1,7 @@
+import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CheckmarkCircle01Icon, MusicNote02Icon } from "@hugeicons/core-free-icons";
+import { MailSend01Icon, MusicNote02Icon } from "@hugeicons/core-free-icons";
+import Link from "next/link";
 
 export default function RegistroExitoPage() {
   return (
@@ -13,7 +15,7 @@ export default function RegistroExitoPage() {
       <div className="glass-card relative z-10 flex w-full max-w-sm flex-col items-center gap-6 rounded-[20px] p-8 text-center">
         <div className="relative">
           <div className="flex size-20 items-center justify-center rounded-full bg-[var(--success-bg)]">
-            <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-10 text-[var(--success)]" />
+            <HugeiconsIcon icon={MailSend01Icon} className="size-10 text-[var(--success)]" />
           </div>
           <div className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
             <HugeiconsIcon icon={MusicNote02Icon} className="size-4" />
@@ -22,20 +24,26 @@ export default function RegistroExitoPage() {
 
         <div className="flex flex-col gap-2">
           <h1 className="font-heading text-2xl font-semibold text-foreground">
-            ¡Solicitud Enviada!
+            ¡Revisa tu correo!
           </h1>
           <p className="text-sm text-[var(--text-tertiary)] leading-relaxed">
-            Tu perfil ha sido recibido y está en revisión.
-            Un administrador lo revisará pronto.
+            Te enviamos un enlace de verificación a tu correo electrónico.
+            Haz clic en el enlace para activar tu cuenta.
           </p>
         </div>
 
         <div className="w-full rounded-2xl bg-[var(--elevated)] p-4">
           <p className="text-xs text-[var(--text-muted)]">
-            Cuando tu perfil sea aprobado, aparecerás en el catálogo de artistas
-            y los restaurantes podrán contactarte directamente.
+            Si no ves el correo, revisa tu carpeta de spam.
+            El enlace expira en 1 hora.
           </p>
         </div>
+
+        <Link href="/login" className="w-full">
+          <Button variant="outline" className="h-10 w-full">
+            Volver a iniciar sesión
+          </Button>
+        </Link>
       </div>
     </div>
   );
