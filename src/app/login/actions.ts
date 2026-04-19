@@ -42,9 +42,10 @@ export async function signInWithEmail(formData: FormData) {
   });
 
   if (error) {
-    const params = new URLSearchParams({ error: "invalid_credentials" });
-    if (token) params.set("token", token);
-    redirect(`/login?${params.toString()}`);
+    const message = error.message?.includes("Email not confirmed")
+      ? "Debes confirmar tu correo electrónico antes de iniciar sesión."
+      : "Correo o contraseña incorrectos.";
+    return { error: message };
   }
 
   const adminClient = createAdminClient();

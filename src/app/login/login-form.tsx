@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -12,16 +12,27 @@ interface LoginFormProps {
 
 export function LoginForm({ token }: LoginFormProps) {
   const [isPending, startTransition] = useTransition();
+  const [localError, setLocalError] = useState<string | null>(null);
 
   function handleSubmit(formData: FormData) {
+    setLocalError(null);
     startTransition(async () => {
-      await signInWithEmail(formData);
+      const result = await signInWithEmail(formData);
+      if (result?.error) {
+        setLocalError(result.error);
+      }
     });
   }
 
   return (
     <form action={handleSubmit} className="flex flex-col gap-4">
       {token && <input type="hidden" name="token" value={token} />}
+
+      {localError && (
+        <div className="rounded-lg bg-[var(--error-bg)] px-4 py-3 text-sm text-[var(--error)]">
+          {localError}
+        </div>
+      )}
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">Correo electrónico</Label>
