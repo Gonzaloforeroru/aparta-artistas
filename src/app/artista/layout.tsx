@@ -7,8 +7,14 @@ import { isProfileComplete } from "@/app/artista/utils"
 import { signOut } from "@/app/login/actions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Settings01Icon } from "@hugeicons/core-free-icons"
+import { Settings01Icon, Mail01Icon, LockPasswordIcon } from "@hugeicons/core-free-icons"
 
 export default async function ArtistaLayout({
   children,
@@ -88,11 +94,23 @@ export default async function ArtistaLayout({
                 {displayName}
               </span>
             </div>
-            <Link href="/artista/cuenta">
-              <Button variant="ghost" size="sm">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={<Button variant="ghost" size="sm" />}
+              >
                 <HugeiconsIcon icon={Settings01Icon} className="size-4" />
-              </Button>
-            </Link>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem render={<Link href="/artista/cuenta/correo" />}>
+                  <HugeiconsIcon icon={Mail01Icon} className="size-4" />
+                  Cambiar correo
+                </DropdownMenuItem>
+                <DropdownMenuItem render={<Link href="/artista/cuenta/contrasena" />}>
+                  <HugeiconsIcon icon={LockPasswordIcon} className="size-4" />
+                  Cambiar contraseña
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <form action={signOut}>
               <Button variant="ghost" size="sm" type="submit">
                 Cerrar sesión
