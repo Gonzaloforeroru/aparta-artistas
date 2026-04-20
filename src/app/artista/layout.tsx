@@ -7,6 +7,8 @@ import { isProfileComplete } from "@/app/artista/utils"
 import { signOut } from "@/app/login/actions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Settings01Icon } from "@hugeicons/core-free-icons"
 
 export default async function ArtistaLayout({
   children,
@@ -86,6 +88,11 @@ export default async function ArtistaLayout({
                 {displayName}
               </span>
             </div>
+            <Link href="/artista/cuenta">
+              <Button variant="ghost" size="sm">
+                <HugeiconsIcon icon={Settings01Icon} className="size-4" />
+              </Button>
+            </Link>
             <form action={signOut}>
               <Button variant="ghost" size="sm" type="submit">
                 Cerrar sesión
