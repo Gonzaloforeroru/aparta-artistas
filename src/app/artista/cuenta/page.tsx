@@ -19,13 +19,13 @@ export default async function CuentaPage() {
   const provider = await getAuthProvider()
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold tracking-tight">
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-6">
+      <h1 className="text-center text-2xl font-bold tracking-tight">
         Configuración de cuenta
       </h1>
 
       {provider === "google" ? (
-        <Card className="max-w-xl">
+        <Card>
           <CardContent className="flex items-start gap-3 p-6">
             <HugeiconsIcon
               icon={InformationCircleIcon}
