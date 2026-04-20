@@ -231,30 +231,18 @@ export function CatalogoContent({ artists }: { artists: Artist[] }) {
         </p>
       </div>
 
-      {/* ── Search + City filter ─────────────────────── */}
+      {/* ── Filters ─────────────────────────────────── */}
       <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <HugeiconsIcon
-            icon={Search01Icon}
-            className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]"
-          />
-           <Input
-             placeholder="Buscar artista..."
-             value={search}
-             onChange={(e) => setSearch(e.target.value)}
-             className="h-11 rounded-full gradient-border-subtle bg-[var(--elevated)] pl-11 text-sm placeholder:text-[var(--text-muted)]"
-           />
-        </div>
         <Select
           value={cityFilter}
           onValueChange={(v) => setCityFilter(v ?? "all")}
         >
-           <SelectTrigger className="h-11 w-full rounded-full gradient-border-subtle bg-[var(--elevated)] sm:w-44">
+           <SelectTrigger className="h-11 w-full rounded-full gradient-border-subtle bg-[var(--elevated)] sm:w-48">
             <HugeiconsIcon
               icon={Location01Icon}
               className="mr-1.5 size-4 text-[var(--text-muted)]"
             />
-            <SelectValue placeholder="Ciudad" />
+            <span className="flex-1 text-left">{cityFilter === "all" ? "Ciudad" : cityFilter}</span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas las ciudades</SelectItem>
@@ -269,15 +257,15 @@ export function CatalogoContent({ artists }: { artists: Artist[] }) {
           value={durationFilter}
           onValueChange={(v) => setDurationFilter(v ?? "all")}
         >
-          <SelectTrigger className="h-11 w-full rounded-full gradient-border-subtle bg-[var(--elevated)] sm:w-44">
+          <SelectTrigger className="h-11 w-full rounded-full gradient-border-subtle bg-[var(--elevated)] sm:w-48">
             <HugeiconsIcon
               icon={Clock01Icon}
               className="mr-1.5 size-4 text-[var(--text-muted)]"
             />
-            <SelectValue placeholder="Duración" />
+            <span className="flex-1 text-left">{durationFilter === "all" ? "Duración" : durationFilter}</span>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="all">Todas las duraciones</SelectItem>
             {DURATION_OPTIONS.map((d) => (
               <SelectItem key={d} value={d}>
                 {d}
@@ -285,6 +273,18 @@ export function CatalogoContent({ artists }: { artists: Artist[] }) {
             ))}
           </SelectContent>
         </Select>
+        <div className="relative sm:ml-auto sm:w-56">
+          <HugeiconsIcon
+            icon={Search01Icon}
+            className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]"
+          />
+           <Input
+             placeholder="Buscar..."
+             value={search}
+             onChange={(e) => setSearch(e.target.value)}
+             className="h-11 rounded-full gradient-border-subtle bg-[var(--elevated)] pl-11 text-sm placeholder:text-[var(--text-muted)]"
+           />
+        </div>
       </div>
 
       {/* ── Rango de precio (cost slider) ────────────── */}
