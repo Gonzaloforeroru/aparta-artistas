@@ -24,18 +24,22 @@ import {
 
 interface CsvRow {
   nombre: string;
+  email: string;
   ciudad: string;
   tipo: string;
   genero: string;
   telefono: string;
   precio: string;
   duracion: string;
+  website: string;
   valid: boolean;
   error?: string;
 }
 
 function validateRow(row: Omit<CsvRow, "valid" | "error">): { valid: boolean; error?: string } {
   if (!row.nombre?.trim()) return { valid: false, error: "Nombre requerido" };
+  if (!row.email?.trim()) return { valid: false, error: "Email requerido" };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email.trim())) return { valid: false, error: "Email inválido" };
   if (!row.ciudad?.trim()) return { valid: false, error: "Ciudad requerida" };
   if (!row.tipo?.trim()) return { valid: false, error: "Tipo requerido" };
   if (!VALID_TYPES.includes(row.tipo as ArtistType)) return { valid: false, error: `Tipo inválido: ${row.tipo}` };
@@ -56,9 +60,11 @@ function parseCsv(text: string): CsvRow[] {
     const raw: Record<string, string> = {};
     headers.forEach((h, i) => { raw[h] = values[i] ?? ""; });
     const row = {
-      nombre: raw["nombre"] ?? "", ciudad: raw["ciudad"] ?? "", tipo: raw["tipo"] ?? "",
+      nombre: raw["nombre"] ?? "", email: raw["email"] ?? "",
+      ciudad: raw["ciudad"] ?? "", tipo: raw["tipo"] ?? "",
       genero: raw["genero"] ?? "", telefono: raw["telefono"] ?? "",
       precio: raw["precio"] ?? "", duracion: raw["duracion"] ?? "",
+      website: raw["website"] ?? raw["sitio_web"] ?? "",
     };
     const validation = validateRow(row);
     return { ...row, ...validation };
@@ -66,9 +72,10 @@ function parseCsv(text: string): CsvRow[] {
 }
 
 function downloadTemplate() {
-  const headers = ["nombre", "ciudad", "tipo", "genero", "telefono", "precio", "duracion", "instagram", "tiktok", "youtube", "spotify"];
+  const headers = ["nombre", "email", "ciudad", "tipo", "genero", "telefono", "precio", "duracion", "instagram", "tiktok", "youtube", "spotify", "website"];
   const exampleRow = [
     "Juan Pérez",
+    "juan@correo.com",
     "Bogotá",
     "Cantante",
     "Vallenato",
@@ -78,7 +85,8 @@ function downloadTemplate() {
     "https://instagram.com/juanperez",
     "https://tiktok.com/@juanperez",
     "https://youtube.com/@juanperez",
-    "https://open.spotify.com/artist/juanperez"
+    "https://open.spotify.com/artist/juanperez",
+    "https://juanperez.com"
   ];
   const csvContent = [headers.join(","), exampleRow.join(",")].join("\n");
   
@@ -114,9 +122,11 @@ export default function AdminImportarPage() {
     startTransition(async () => {
       try {
         const rows = validRows.map((r) => ({
-          name: r.nombre, city: r.ciudad, type: r.tipo as ArtistType,
+          name: r.nombre, email: r.email.trim().toLowerCase(),
+          city: r.ciudad, type: r.tipo as ArtistType,
           genre: r.genero as Genre, phone: r.telefono,
           price: parseInt(r.precio), duration: r.duracion,
+          website: r.website?.trim() || undefined,
         }));
         const result = await importArtists(rows);
         toast.success(`${result.count} artistas importados exitosamente`);
@@ -162,7 +172,7 @@ export default function AdminImportarPage() {
               <input type="file" accept=".csv" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
             </Button>
             <p className="text-xs text-muted-foreground">
-              Columnas: nombre, ciudad, tipo, genero, telefono, precio, duracion, instagram, tiktok, youtube, spotify
+              Columnas: nombre, email, ciudad, tipo, genero, telefono, precio, duracion, instagram, tiktok, youtube, spotify, website
             </p>
           </CardContent>
         </Card>
@@ -193,7 +203,8 @@ export default function AdminImportarPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10"></TableHead>
-                      <TableHead>Nombre</TableHead>
+                       <TableHead>Nombre</TableHead>
+                      <TableHead>Email</TableHead>
                       <TableHead>Ciudad</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Género</TableHead>
@@ -212,6 +223,7 @@ export default function AdminImportarPage() {
                           )}
                         </TableCell>
                         <TableCell className="font-medium">{row.nombre || <span className="text-[var(--error)] italic">vacío</span>}</TableCell>
+                        <TableCell>{row.email || <span className="text-[var(--error)] italic">vacío</span>}</TableCell>
                         <TableCell>{row.ciudad}</TableCell>
                         <TableCell>{row.tipo}</TableCell>
                         <TableCell>{row.genero}</TableCell>

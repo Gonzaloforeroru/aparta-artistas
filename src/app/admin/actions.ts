@@ -259,6 +259,7 @@ export async function getInvitations() {
 
 interface ArtistImportRow {
   name: string;
+  email: string;
   city: string;
   type: ArtistType;
   genre: Genre;
@@ -269,6 +270,7 @@ interface ArtistImportRow {
   tiktok?: string;
   youtube?: string;
   spotify?: string;
+  website?: string;
 }
 
 export async function importArtists(rows: ArtistImportRow[]) {
