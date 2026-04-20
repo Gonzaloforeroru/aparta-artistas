@@ -20,6 +20,7 @@ import {
   Clock01Icon,
   Location01Icon,
   Cancel01Icon,
+  MusicNote02Icon,
   Globe02Icon,
   LinkSquare01Icon,
 } from "@hugeicons/core-free-icons";
@@ -157,32 +158,6 @@ function ArtistCard({ artist }: { artist: Artist }) {
   );
 }
 
-/* ── Genre pill ────────────────────────────────────────── */
-
-function GenrePill({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-        active
-          ? "bg-[var(--cta)] text-[var(--cta-foreground)]"
-          : "gradient-border-subtle text-[var(--text-muted)] hover:bg-[var(--card-hover)] hover:text-foreground"
-      }`}
-    >
-      {label}
-      {active && <HugeiconsIcon icon={Cancel01Icon} className="size-3" />}
-    </button>
-  );
-}
-
 /* ── Main component ────────────────────────────────────── */
 
 export function CatalogoContent({ artists }: { artists: Artist[] }) {
@@ -273,6 +248,26 @@ export function CatalogoContent({ artists }: { artists: Artist[] }) {
             ))}
           </SelectContent>
         </Select>
+        <Select
+          value={genreFilter}
+          onValueChange={(v) => setGenreFilter(v ?? "all")}
+        >
+          <SelectTrigger className="h-11 w-full rounded-full gradient-border-subtle bg-[var(--elevated)] sm:w-48">
+            <HugeiconsIcon
+              icon={MusicNote02Icon}
+              className="mr-1.5 size-4 text-[var(--text-muted)]"
+            />
+            <span className="flex-1 text-left">{genreFilter === "all" ? "Género" : genreFilter}</span>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los géneros</SelectItem>
+            {genres.map((g) => (
+              <SelectItem key={g} value={g}>
+                {g}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="relative sm:ml-auto sm:w-56">
           <HugeiconsIcon
             icon={Search01Icon}
@@ -308,25 +303,17 @@ export function CatalogoContent({ artists }: { artists: Artist[] }) {
         </div>
       </div>
 
-      {/* ── Géneros (pill filters) ──────────────────── */}
-      <div className="mb-8 flex flex-wrap items-center gap-2">
-        {genres.map((g) => (
-          <GenrePill
-            key={g}
-            label={g}
-            active={genreFilter === g}
-            onClick={() => setGenreFilter(genreFilter === g ? "all" : g)}
-          />
-        ))}
-        {hasActiveFilters && (
+      {/* ── Active filters indicator ──────────────────── */}
+      {hasActiveFilters && (
+        <div className="mb-8 flex items-center">
           <button
             onClick={clearFilters}
-            className="ml-2 text-xs font-medium text-[var(--cta)] transition-colors hover:text-[var(--cta)]/80"
+            className="text-xs font-medium text-[var(--cta)] transition-colors hover:text-[var(--cta)]/80"
           >
             Limpiar filtros
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ── Results header ──────────────────────────── */}
       <div className="mb-4 flex items-center justify-between">
