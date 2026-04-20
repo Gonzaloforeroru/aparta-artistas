@@ -191,7 +191,7 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
                   </Select>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="price">Precio por presentación</Label>
+                  <Label htmlFor="price">Precio por presentación <span className="text-destructive">*</span></Label>
                   <Input
                     id="price"
                     name="price"
@@ -201,7 +201,7 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label>Duración del show</Label>
+                  <Label>Duración del show <span className="text-destructive">*</span></Label>
                   <Select
                     value={duration}
                     onValueChange={(v) => setDuration(v ?? "")}
