@@ -39,6 +39,12 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
     artist.photo ?? null
   );
 
+  // Controlled state for Select components (base-ui Select doesn't send FormData via name prop)
+  const [city, setCity] = useState<string>(artist.city ?? "");
+  const [type, setType] = useState<string>(artist.type ?? "");
+  const [genre, setGenre] = useState<string>(artist.genre ?? "");
+  const [duration, setDuration] = useState<string>(artist.duration ?? "");
+
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) setPhotoPreview(URL.createObjectURL(file));
@@ -59,6 +65,12 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
 
   return (
     <form action={handleSubmit} className="w-full max-w-2xl">
+      {/* Hidden inputs for Select values (base-ui Select doesn't submit FormData) */}
+      <input type="hidden" name="city" value={city} />
+      <input type="hidden" name="type" value={type} />
+      <input type="hidden" name="genre" value={genre} />
+      <input type="hidden" name="duration" value={duration} />
+
       <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
         {/* Photo upload */}
         <Card className="h-fit">
@@ -123,9 +135,8 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
                     Ciudad <span className="text-destructive">*</span>
                   </Label>
                   <Select
-                    name="city"
-                    defaultValue={artist.city ?? ""}
-                    required
+                    value={city}
+                    onValueChange={(v) => setCity(v ?? "")}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar" />
@@ -144,9 +155,8 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
                     Profesión <span className="text-destructive">*</span>
                   </Label>
                   <Select
-                    name="type"
-                    defaultValue={artist.type ?? ""}
-                    required
+                    value={type}
+                    onValueChange={(v) => setType(v ?? "")}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar" />
@@ -165,9 +175,8 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
                     Género Musical <span className="text-destructive">*</span>
                   </Label>
                   <Select
-                    name="genre"
-                    defaultValue={artist.genre ?? ""}
-                    required
+                    value={genre}
+                    onValueChange={(v) => setGenre(v ?? "")}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar" />
@@ -194,8 +203,8 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
                 <div className="flex flex-col gap-2">
                   <Label>Duración del show</Label>
                   <Select
-                    name="duration"
-                    defaultValue={artist.duration ?? ""}
+                    value={duration}
+                    onValueChange={(v) => setDuration(v ?? "")}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar" />
