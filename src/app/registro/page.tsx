@@ -1,7 +1,9 @@
+import { redirect } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MusicNote02Icon } from "@hugeicons/core-free-icons";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { RegistroEmailForm } from "@/app/registro/registro-email-form";
+import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 
 const errorMessages: Record<string, string> = {
@@ -17,6 +19,21 @@ interface RegistroPageProps {
 export default async function RegistroPage({
   searchParams,
 }: RegistroPageProps) {
+  // If already logged in, redirect
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role === "admin") redirect("/admin");
+    redirect("/artista");
+  }
+
   const params = await searchParams;
   const error = params.error;
 

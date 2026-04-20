@@ -1,8 +1,10 @@
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MusicNote02Icon } from "@hugeicons/core-free-icons";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { LoginForm } from "@/app/login/login-form";
+import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 
 const errorMessages: Record<string, string> = {
@@ -21,6 +23,21 @@ interface LoginPageProps {
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
+  // If already logged in, redirect to the correct dashboard
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role === "admin") redirect("/admin");
+    redirect("/artista");
+  }
+
   const params = await searchParams;
   const token = params.token;
   const error = params.error;
