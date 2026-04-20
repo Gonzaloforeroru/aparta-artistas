@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,6 +14,7 @@ interface CuentaFormProps {
 }
 
 export function CuentaForm({ email }: CuentaFormProps) {
+  const router = useRouter()
   // ─── Email form state ───
   const [emailPending, startEmailTransition] = useTransition()
   const [emailMessage, setEmailMessage] = useState<{
@@ -102,13 +104,24 @@ export function CuentaForm({ email }: CuentaFormProps) {
               </p>
             )}
 
-            <Button
-              type="submit"
-              disabled={emailPending}
-              className="h-11 font-semibold"
-            >
-              {emailPending ? "Actualizando..." : "Actualizar correo"}
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 flex-1 font-semibold"
+                onClick={() => router.push("/artista")}
+                disabled={emailPending}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={emailPending}
+                className="h-11 flex-1 font-semibold"
+              >
+                {emailPending ? "Actualizando..." : "Actualizar correo"}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
@@ -169,13 +182,24 @@ export function CuentaForm({ email }: CuentaFormProps) {
               </p>
             )}
 
-            <Button
-              type="submit"
-              disabled={passwordPending}
-              className="h-11 font-semibold"
-            >
-              {passwordPending ? "Actualizando..." : "Actualizar contraseña"}
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 flex-1 font-semibold"
+                onClick={() => router.push("/artista")}
+                disabled={passwordPending}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={passwordPending}
+                className="h-11 flex-1 font-semibold"
+              >
+                {passwordPending ? "Actualizando..." : "Actualizar contraseña"}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
