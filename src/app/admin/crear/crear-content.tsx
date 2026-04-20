@@ -25,6 +25,7 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [photoPreview, setPhotoPreview] = useState<string | null>(existingArtist?.photo ?? null);
+  const [deletePhoto, setDeletePhoto] = useState(false);
   const isEditing = !!existingArtist;
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -33,6 +34,9 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
   }
 
   function handleSubmit(formData: FormData) {
+    if (deletePhoto) {
+      formData.set("deletePhoto", "true");
+    }
     startTransition(async () => {
       try {
         if (isEditing) {
@@ -83,7 +87,7 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
                 )}
                 <input type="file" name="photo" accept="image/*" className="hidden" onChange={handlePhotoChange} />
               </label>
-              {isEditing && photoPreview && (
+              {isEditing && photoPreview && !deletePhoto && (
                 <Button
                   type="button"
                   variant="destructive"
@@ -91,22 +95,30 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
                   className="w-full gap-2"
                   disabled={isPending}
                   onClick={() => {
-                    if (!existingArtist?.id) return;
-                    if (!confirm("¿Eliminar foto permanentemente?")) return;
-                    startTransition(async () => {
-                      try {
-                        await removeArtistPhoto(existingArtist.id);
-                        setPhotoPreview(null);
-                        toast.success("Foto eliminada");
-                      } catch {
-                        toast.error("Error al eliminar la foto");
-                      }
-                    });
+                    setDeletePhoto(true);
+                    setPhotoPreview(null);
                   }}
                 >
                   <HugeiconsIcon icon={Delete01Icon} className="size-4" />
                   Eliminar foto
                 </Button>
+              )}
+              {deletePhoto && (
+                <div className="flex w-full flex-col items-center gap-2">
+                  <p className="text-xs text-destructive">La foto se eliminará al guardar</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      setDeletePhoto(false);
+                      setPhotoPreview(existingArtist?.photo ?? null);
+                    }}
+                  >
+                    Restaurar foto
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>

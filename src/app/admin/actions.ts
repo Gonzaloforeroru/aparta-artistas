@@ -67,13 +67,19 @@ export async function updateArtist(id: string, formData: FormData) {
     .eq("id", id)
     .single();
 
-  // Handle photo upload
+  // Handle photo deletion
+  const shouldDeletePhoto = formData.get("deletePhoto") === "true";
   const photoFile = formData.get("photo") as File | null;
   let photoUrl: string | null = currentArtist?.photo ?? null;
 
-  // Upload new photo if provided
-  if (photoFile && photoFile.size > 0) {
-    // Delete old photo first to free storage space
+  if (shouldDeletePhoto) {
+    // Delete photo permanently from storage
+    if (currentArtist?.photo) {
+      await deleteArtistPhoto(currentArtist.photo);
+    }
+    photoUrl = null;
+  } else if (photoFile && photoFile.size > 0) {
+    // Upload new photo if provided
     if (currentArtist?.photo) {
       await deleteArtistPhoto(currentArtist.photo);
     }
