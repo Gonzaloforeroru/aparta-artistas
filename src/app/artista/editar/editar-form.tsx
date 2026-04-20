@@ -49,6 +49,7 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
       const result = await updateMyArtistProfile(formData);
       if (result.success) {
         toast.success("Perfil actualizado");
+        router.refresh();
         router.push("/artista");
       } else {
         toast.error(result.error);

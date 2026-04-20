@@ -100,7 +100,7 @@ export async function updateMyArtistProfile(
     return { success: false, error: updateError.message };
   }
 
-  revalidatePath("/artista");
+  revalidatePath("/artista", "layout");
   return { success: true };
 }
 
