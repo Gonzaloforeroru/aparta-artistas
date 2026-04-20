@@ -4,6 +4,27 @@ Apparta es una plataforma donde restaurantes colombianos pueden encontrar y cont
 
 ---
 
+## Usuarios de prueba
+
+| Rol | Email | Contraseña | Cómo ingresar |
+|-----|-------|------------|---------------|
+| **Admin** | `gonzalo@apparta.co` | — | Iniciar sesión con Google |
+| **Artista (Beéle)** | `beele@ejemplo.com` | `beele123` | Iniciar sesión con correo y contraseña |
+
+### Probar como Beéle (artista)
+1. Ir a la página de inicio de sesión
+2. Escribir correo: `beele@ejemplo.com` y contraseña: `beele123`
+3. Clic en "Iniciar sesión"
+4. Verás el perfil de Beéle con todos sus datos, foto y redes sociales
+
+### Probar como Admin
+1. Ir a la página de inicio de sesión
+2. Clic en "Continuar con Google"
+3. Seleccionar la cuenta `gonzalo@apparta.co`
+4. Se abre el panel de administración con todas las opciones
+
+---
+
 ## Para Visitantes (sin cuenta)
 
 ### Ver el catálogo de artistas

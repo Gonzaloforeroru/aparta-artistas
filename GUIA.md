@@ -4,10 +4,10 @@
 
 | Rol | Email | Contraseña | Acceso |
 |-----|-------|------------|--------|
-| **Admin** | `maldonadoelir@gmail.com` | Google OAuth | `/admin` |
+| **Admin** | `gonzalo@apparta.co` | Google OAuth | `/admin` |
 | **Artista (Beéle)** | `beele@ejemplo.com` | `beele123` | `/artista` |
 
-> **Nota:** El admin se determina por la variable `ADMIN_EMAIL` en `.env.local`. Cualquier otro usuario que se loguee entra como artista.
+> **Nota:** El admin se determina por la variable `ADMIN_EMAIL` en `.env.local`. Actualmente configurado como `gonzalo@apparta.co`. Cualquier otro usuario que se loguee entra como artista.
 
 ---
 
