@@ -21,6 +21,7 @@ import {
   SmartPhone01Icon,
   MusicNote02Icon,
   MoneyBag02Icon,
+  Globe02Icon,
 } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 
@@ -204,7 +205,7 @@ export default async function ArtistaProfilePage() {
               </div>
 
               {/* Social links */}
-              {(artist.instagram || artist.tiktok || artist.youtube || artist.spotify) && (
+              {(artist.instagram || artist.tiktok || artist.youtube || artist.spotify || artist.website) && (
                 <div>
                   <p className="mb-3 text-xs font-medium uppercase tracking-widest text-[var(--text-muted)]">
                     Redes sociales
@@ -240,6 +241,16 @@ export default async function ArtistaProfilePage() {
                         icon={SpotifyIcon}
                         label="Spotify"
                         color="text-[#1DB954]"
+                      />
+                    )}
+                    {artist.website && (
+                      <SocialLink
+                        href={artist.website}
+                        icon={({ className }: { className?: string }) => (
+                          <HugeiconsIcon icon={Globe02Icon} className={className} />
+                        )}
+                        label="Página Web"
+                        color="text-blue-500"
                       />
                     )}
                   </div>

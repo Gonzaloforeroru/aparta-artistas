@@ -35,6 +35,7 @@ export async function createArtist(formData: FormData) {
        tiktok: (formData.get("tiktok") as string) || null,
        youtube: (formData.get("youtube") as string) || null,
        spotify: (formData.get("spotify") as string) || null,
+       website: (formData.get("website") as string) || null,
        created_by: user?.id,
      })
      .select()
@@ -105,6 +106,7 @@ export async function updateArtist(id: string, formData: FormData) {
        tiktok: (formData.get("tiktok") as string) || null,
        youtube: (formData.get("youtube") as string) || null,
        spotify: (formData.get("spotify") as string) || null,
+       website: (formData.get("website") as string) || null,
        photo: photoUrl,
      })
      .eq("id", id);
@@ -335,6 +337,7 @@ export async function registerArtistWithToken(token: string, formData: FormData)
       tiktok: (formData.get("tiktok") as string) || null,
       youtube: (formData.get("youtube") as string) || null,
       spotify: (formData.get("spotify") as string) || null,
+      website: (formData.get("website") as string) || null,
     })
     .select()
     .single();

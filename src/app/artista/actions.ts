@@ -92,6 +92,7 @@ export async function updateMyArtistProfile(
       tiktok: (formData.get("tiktok") as string) || null,
       youtube: (formData.get("youtube") as string) || null,
       spotify: (formData.get("spotify") as string) || null,
+      website: (formData.get("website") as string) || null,
       photo: photoUrl,
     })
     .eq("user_id", user.id);

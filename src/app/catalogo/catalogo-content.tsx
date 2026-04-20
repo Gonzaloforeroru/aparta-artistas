@@ -20,8 +20,21 @@ import {
   Clock01Icon,
   Location01Icon,
   Cancel01Icon,
+  Globe02Icon,
+  LinkSquare01Icon,
 } from "@hugeicons/core-free-icons";
-import { YoutubeIcon } from "@/components/social-icons";
+import {
+  YoutubeIcon,
+  InstagramIcon,
+  TikTokIcon,
+  SpotifyIcon,
+} from "@/components/social-icons";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 
 type Artist = Tables<"artists">;
@@ -31,6 +44,16 @@ type Artist = Tables<"artists">;
 
 function ArtistCard({ artist }: { artist: Artist }) {
   const whatsappUrl = `https://wa.me/57${artist.phone}`;
+
+  type SocialLink = { label: string; href: string; icon: (props: { className?: string }) => React.ReactNode; color: string };
+
+  const socialLinks = ([
+    artist.youtube ? { label: "YouTube", href: artist.youtube, icon: (p: { className?: string }) => <YoutubeIcon className={p.className} />, color: "bg-red-600 hover:bg-red-700" } : null,
+    artist.instagram ? { label: "Instagram", href: artist.instagram, icon: (p: { className?: string }) => <InstagramIcon className={p.className} />, color: "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600" } : null,
+    artist.tiktok ? { label: "TikTok", href: artist.tiktok, icon: (p: { className?: string }) => <TikTokIcon className={p.className} />, color: "bg-black hover:bg-gray-900" } : null,
+    artist.spotify ? { label: "Spotify", href: artist.spotify, icon: (p: { className?: string }) => <SpotifyIcon className={p.className} />, color: "bg-green-600 hover:bg-green-700" } : null,
+    artist.website ? { label: "Web", href: artist.website, icon: (p: { className?: string }) => <HugeiconsIcon icon={Globe02Icon} className={p.className} />, color: "bg-blue-600 hover:bg-blue-700" } : null,
+  ] as (SocialLink | null)[]).filter((v): v is SocialLink => v !== null);
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl gradient-border-subtle bg-[var(--elevated)] transition-colors hover:bg-[var(--card-hover)]">
@@ -80,7 +103,7 @@ function ArtistCard({ artist }: { artist: Artist }) {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={artist.youtube ? "flex-1" : "w-full"}
+              className={socialLinks.length > 0 ? "flex-1" : "w-full"}
             >
               <Button className="w-full gap-2 rounded-full bg-[var(--whatsapp)] text-white font-medium hover:bg-[var(--whatsapp-hover)]">
                 <HugeiconsIcon icon={BubbleChatIcon} className="size-4" />
@@ -88,18 +111,45 @@ function ArtistCard({ artist }: { artist: Artist }) {
               </Button>
             </a>
           )}
-          {artist.youtube && (
+
+          {/* Single social link → direct button */}
+          {socialLinks.length === 1 && (
             <a
-              href={artist.youtube}
+              href={socialLinks[0].href}
               target="_blank"
               rel="noopener noreferrer"
               className={artist.phone ? "flex-1" : "w-full"}
             >
-              <Button className="w-full gap-2 rounded-full bg-red-600 text-white font-medium hover:bg-red-700">
-                <YoutubeIcon className="size-4" />
-                YouTube
+              <Button className={`w-full gap-2 rounded-full text-white font-medium ${socialLinks[0].color}`}>
+                {socialLinks[0].icon({ className: "size-4" })}
+                {socialLinks[0].label}
               </Button>
             </a>
+          )}
+
+          {/* Multiple social links → dropdown */}
+          {socialLinks.length >= 2 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button className={`gap-2 rounded-full bg-[var(--elevated)] text-foreground font-medium gradient-border-subtle hover:bg-[var(--card-hover)] ${artist.phone ? "flex-1" : "w-full"}`} />
+                }
+              >
+                <HugeiconsIcon icon={LinkSquare01Icon} className="size-4" />
+                Redes
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" sideOffset={8}>
+                {socialLinks.map((link) => (
+                  <DropdownMenuItem
+                    key={link.label}
+                    render={<a href={link.href} target="_blank" rel="noopener noreferrer" />}
+                  >
+                    {link.icon({ className: "size-4" })}
+                    {link.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>

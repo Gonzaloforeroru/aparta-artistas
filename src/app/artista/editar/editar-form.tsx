@@ -26,6 +26,7 @@ import {
   TikTokIcon,
   SpotifyIcon,
 } from "@/components/social-icons";
+import { Globe02Icon } from "@hugeicons/core-free-icons";
 
 interface EditarFormProps {
   artist: Artist;
@@ -287,6 +288,16 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
                     name="spotify"
                     placeholder="https://open.spotify.com/..."
                     defaultValue={artist.spotify ?? ""}
+                  />
+                </div>
+                <div className="flex flex-col gap-2 sm:col-span-2">
+                  <Label className="flex items-center gap-1.5 text-muted-foreground">
+                    <HugeiconsIcon icon={Globe02Icon} className="h-3.5 w-3.5" /> Página Web
+                  </Label>
+                  <Input
+                    name="website"
+                    placeholder="https://tupagina.com"
+                    defaultValue={artist.website ?? ""}
                   />
                 </div>
               </div>

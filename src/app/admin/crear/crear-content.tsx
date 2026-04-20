@@ -17,6 +17,7 @@ import { createArtist, updateArtist, removeArtistPhoto } from "@/app/admin/actio
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon, Upload01Icon, BubbleChatIcon, Delete01Icon } from "@hugeicons/core-free-icons";
 import { InstagramIcon, YoutubeIcon, TikTokIcon, SpotifyIcon } from "@/components/social-icons";
+import { Globe02Icon } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 
 type Artist = Tables<"artists">;
@@ -206,6 +207,10 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
                   <div className="flex flex-col gap-2">
                     <Label className="flex items-center gap-1.5 text-muted-foreground"><SpotifyIcon className="h-3.5 w-3.5" /> Spotify</Label>
                     <Input name="spotify" placeholder="https://open.spotify.com/..." defaultValue={existingArtist?.spotify ?? ""} />
+                  </div>
+                  <div className="flex flex-col gap-2 sm:col-span-2">
+                    <Label className="flex items-center gap-1.5 text-muted-foreground"><HugeiconsIcon icon={Globe02Icon} className="h-3.5 w-3.5" /> Página Web</Label>
+                    <Input name="website" placeholder="https://tupagina.com" defaultValue={existingArtist?.website ?? ""} />
                   </div>
                 </div>
               </div>

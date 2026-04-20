@@ -38,6 +38,7 @@ export type Database = {
           type: Database["public"]["Enums"]["artist_type"]
           updated_at: string
           user_id: string | null
+          website: string | null
           youtube: string | null
         }
         Insert: {
@@ -63,6 +64,7 @@ export type Database = {
           type: Database["public"]["Enums"]["artist_type"]
           updated_at?: string
           user_id?: string | null
+          website?: string | null
           youtube?: string | null
         }
         Update: {
@@ -88,6 +90,7 @@ export type Database = {
           type?: Database["public"]["Enums"]["artist_type"]
           updated_at?: string
           user_id?: string | null
+          website?: string | null
           youtube?: string | null
         }
         Relationships: [
@@ -304,11 +307,6 @@ export type CompositeTypes<
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
-// Convenience type aliases for enum types used across the app
-export type ArtistType = Database["public"]["Enums"]["artist_type"]
-export type Genre = Database["public"]["Enums"]["genre"]
-export type ArtistStatus = Database["public"]["Enums"]["artist_status"]
-
 export const Constants = {
   public: {
     Enums: {
@@ -335,3 +333,7 @@ export const Constants = {
     },
   },
 } as const
+
+export type ArtistType = Database["public"]["Enums"]["artist_type"]
+export type Genre = Database["public"]["Enums"]["genre"]
+export type ArtistStatus = Database["public"]["Enums"]["artist_status"]
