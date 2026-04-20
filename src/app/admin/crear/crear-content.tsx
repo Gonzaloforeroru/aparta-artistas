@@ -13,9 +13,9 @@ import {
 } from "@/components/ui/select";
 import { cities, artistTypes, genres } from "@/lib/data";
 import type { Tables } from "@/lib/supabase/database.types";
-import { createArtist, updateArtist } from "@/app/admin/actions";
+import { createArtist, updateArtist, removeArtistPhoto } from "@/app/admin/actions";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft01Icon, Upload01Icon, BubbleChatIcon } from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon, Upload01Icon, BubbleChatIcon, Delete01Icon } from "@hugeicons/core-free-icons";
 import { InstagramIcon, YoutubeIcon, TikTokIcon, SpotifyIcon } from "@/components/social-icons";
 import Link from "next/link";
 
@@ -83,6 +83,31 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
                 )}
                 <input type="file" name="photo" accept="image/*" className="hidden" onChange={handlePhotoChange} />
               </label>
+              {isEditing && photoPreview && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="w-full gap-2"
+                  disabled={isPending}
+                  onClick={() => {
+                    if (!existingArtist?.id) return;
+                    if (!confirm("¿Eliminar foto permanentemente?")) return;
+                    startTransition(async () => {
+                      try {
+                        await removeArtistPhoto(existingArtist.id);
+                        setPhotoPreview(null);
+                        toast.success("Foto eliminada");
+                      } catch {
+                        toast.error("Error al eliminar la foto");
+                      }
+                    });
+                  }}
+                >
+                  <HugeiconsIcon icon={Delete01Icon} className="size-4" />
+                  Eliminar foto
+                </Button>
+              )}
             </CardContent>
           </Card>
 

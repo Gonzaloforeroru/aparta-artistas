@@ -108,6 +108,29 @@ export async function updateArtist(id: string, formData: FormData) {
   revalidatePath("/catalogo");
 }
 
+export async function removeArtistPhoto(id: string) {
+  const supabase = await createClient();
+
+  const { data: artist } = await supabase
+    .from("artists")
+    .select("photo")
+    .eq("id", id)
+    .single();
+
+  if (artist?.photo) {
+    await deleteArtistPhoto(artist.photo);
+  }
+
+  const { error } = await supabase
+    .from("artists")
+    .update({ photo: null })
+    .eq("id", id);
+
+  if (error) throw error;
+  revalidatePath("/admin/lista");
+  revalidatePath("/catalogo");
+}
+
 export async function deleteArtist(id: string) {
   const supabase = await createClient();
 
