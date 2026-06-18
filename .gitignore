@@ -49,3 +49,6 @@ AGENTS.md
 
 .vercel
 .env*.local
+
+# Documento confidencial con credenciales
+INFORME.md
