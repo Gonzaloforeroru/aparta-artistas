@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MusicNote02Icon } from "@hugeicons/core-free-icons";
-import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { LoginForm } from "@/app/login/login-form";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -74,18 +73,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             {errorMessages[error]}
           </div>
         )}
-
-        {/* Google sign in */}
-        <GoogleSignInButton token={token} />
-
-        {/* Divider */}
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-[var(--border-subtle)]" />
-          <span className="text-[11px] uppercase text-[var(--text-muted)]">
-            o inicia sesión con tu correo
-          </span>
-          <div className="h-px flex-1 bg-[var(--border-subtle)]" />
-        </div>
 
         {/* Email/password form */}
         <LoginForm token={token} />

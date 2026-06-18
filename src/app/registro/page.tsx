@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MusicNote02Icon } from "@hugeicons/core-free-icons";
-import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { RegistroEmailForm } from "@/app/registro/registro-email-form";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -69,18 +68,6 @@ export default async function RegistroPage({
             {errorMessages[error]}
           </div>
         )}
-
-        {/* Google sign up */}
-        <GoogleSignInButton />
-
-        {/* Divider */}
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-[var(--border-subtle)]" />
-          <span className="text-[11px] uppercase text-[var(--text-muted)]">
-            o regístrate con tu correo
-          </span>
-          <div className="h-px flex-1 bg-[var(--border-subtle)]" />
-        </div>
 
         {/* Email/password signup form */}
         <RegistroEmailForm />
