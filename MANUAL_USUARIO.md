@@ -1,27 +1,20 @@
 # Manual de Usuario — Apparta
 
-Apparta es una plataforma donde restaurantes colombianos pueden encontrar y contactar artistas para sus eventos, y donde los artistas pueden mostrar su perfil profesional.
+Apparta es una plataforma donde los restaurantes y organizadores de eventos colombianos pueden encontrar y contactar artistas para sus eventos, y donde los artistas pueden mostrar su perfil profesional.
+
+**Sitio web:** https://aparta-artistas-brown.vercel.app
 
 ---
 
-## Usuarios de prueba
+## Tipos de usuario
 
-| Rol | Email | Contraseña | Cómo ingresar |
-|-----|-------|------------|---------------|
-| **Admin** | `gonzalo@apparta.co` | — | Iniciar sesión con Google |
-| **Artista (Beéle)** | `beele@ejemplo.com` | `beele123` | Iniciar sesión con correo y contraseña |
+| Rol | Cómo ingresa |
+|-----|--------------|
+| **Visitante** | Sin cuenta — solo explora el catálogo |
+| **Artista** | Se registra con correo y contraseña |
+| **Administrador** | Inicia sesión con el correo administrador (`gonchyforero@hotmail.com`) |
 
-### Probar como Beéle (artista)
-1. Ir a la página de inicio de sesión
-2. Escribir correo: `beele@ejemplo.com` y contraseña: `beele123`
-3. Clic en "Iniciar sesión"
-4. Verás el perfil de Beéle con todos sus datos, foto y redes sociales
-
-### Probar como Admin
-1. Ir a la página de inicio de sesión
-2. Clic en "Continuar con Google"
-3. Seleccionar la cuenta `gonzalo@apparta.co`
-4. Se abre el panel de administración con todas las opciones
+> Toda la autenticación es con **correo y contraseña**. No se necesita cuenta de Google.
 
 ---
 
@@ -38,7 +31,7 @@ Apparta es una plataforma donde restaurantes colombianos pueden encontrar y cont
 Puedes filtrar artistas por:
 - **Nombre**: escribe en la barra de búsqueda
 - **Ciudad**: selecciona del menú desplegable
-- **Género musical**: haz clic en las etiquetas (Vallenato, Salsa, Pop, etc.)
+- **Género musical**: selecciona el género (Vallenato, Salsa, Pop, etc.)
 - **Duración del show**: selecciona cuántas horas necesitas
 - **Precio**: mueve los controles del rango de precio para ajustar tu presupuesto
 
@@ -50,7 +43,7 @@ En la tarjeta de cada artista verás:
 - **Contactar**: abre una conversación directa por WhatsApp
 - **YouTube / Instagram / Redes**: ver el trabajo y performance del artista
 
-Si el artista tiene varias redes sociales, aparece un botón **"Redes"** que al hacer clic muestra todas sus plataformas (YouTube, Instagram, TikTok, Spotify, Sitio web).
+Si el artista tiene varias redes sociales, aparece un botón **"Redes"** que muestra todas sus plataformas (YouTube, Instagram, TikTok, Spotify, Sitio web).
 
 ---
 
@@ -59,17 +52,17 @@ Si el artista tiene varias redes sociales, aparece un botón **"Redes"** que al 
 ### Crear tu cuenta
 
 1. Entra a la página de inicio y haz clic en **"Regístrate"**
-2. Puedes registrarte de dos formas:
-   - **Con Google**: haz clic en "Continuar con Google"
-   - **Con correo y contraseña**: llena el formulario con tu nombre, correo, contraseña y confírmala
-3. Si te registras con correo, recibirás un email de verificación. Haz clic en el enlace del correo para activar tu cuenta
-4. Al entrar por primera vez, verás un formulario para completar tu perfil
+2. Llena el formulario con tu **nombre, correo, contraseña** y confirma la contraseña (mínimo 6 caracteres)
+3. Haz clic en **"Crear cuenta"**
+4. Entras directamente — al ingresar por primera vez verás un formulario para completar tu perfil
+
+> El registro es inmediato, no necesitas confirmar ningún correo.
 
 ### Si ya fuiste agregado por el administrador
 
 Si el administrador ya creó tu perfil (manualmente o desde un archivo), solo necesitas:
 1. Registrarte o iniciar sesión con **el mismo correo** que el administrador usó
-2. El sistema reconocerá tu correo y te mostrará toda la información que ya fue cargada
+2. El sistema reconocerá tu correo y te mostrará toda la información ya cargada
 3. Puedes editar y actualizar tu perfil
 
 ### Completar tu perfil
@@ -105,8 +98,6 @@ Una vez completado, verás tu perfil tal como lo ven los restaurantes en el cat�
 
 ### Cambiar tu correo o contraseña
 
-Solo para cuentas creadas con correo y contraseña (no aplica para cuentas de Google):
-
 1. Haz clic en el ícono de **engranaje** (⚙) en la barra superior
 2. Selecciona:
    - **Cambiar correo**: ingresa tu nuevo correo y confirma
@@ -122,7 +113,9 @@ Haz clic en **"Cerrar sesión"** en la barra superior.
 
 ### Iniciar sesión como administrador
 
-El administrador se identifica por su correo electrónico configurado en el sistema. Al iniciar sesión (con Google o correo/contraseña), el sistema reconoce automáticamente al admin y lo dirige al panel de administración.
+El administrador se identifica por su correo electrónico (`gonchyforero@hotmail.com`). Al iniciar sesión con ese correo y su contraseña, el sistema lo reconoce automáticamente y lo dirige al panel de administración.
+
+> La primera vez, el administrador debe **registrarse** con ese correo (la base de datos arranca vacía). El sistema le asigna el rol admin automáticamente.
 
 ### Panel de administración
 
@@ -139,6 +132,8 @@ Desde el menú lateral puedes acceder a:
 - Ver artistas pendientes de aprobación
 - Aprobar o rechazar cada artista
 - El número en la etiqueta roja indica cuántos artistas están pendientes
+
+> **Importante:** Un artista recién registrado queda como **"Pendiente"** y **no aparece** en el catálogo hasta que lo apruebes aquí.
 
 #### Importar artistas desde un archivo
 
@@ -190,7 +185,7 @@ Para cargar muchos artistas a la vez:
 
 1. En la lista de artistas, haz clic en el artista que quieras editar
 2. Modifica los datos necesarios
-3. Para eliminar la foto: haz clic en **"Eliminar foto"** (la foto se borrará al guardar, no antes)
+3. Para eliminar la foto: haz clic en **"Eliminar foto"** (la foto se borra al guardar, no antes)
 4. Haz clic en **"Actualizar"** para guardar los cambios
 
 #### Invitaciones
@@ -198,8 +193,12 @@ Para cargar muchos artistas a la vez:
 Puedes generar enlaces de invitación para que artistas se registren:
 1. Ve a **Invitaciones** en el menú lateral
 2. Genera un nuevo enlace
-3. Comparte el enlace con el artista (por WhatsApp, email, etc.)
-4. El artista hace clic en el enlace → lo lleva a iniciar sesión → completa su perfil
+3. Comparte el enlace con el artista (por WhatsApp, correo, etc.)
+4. El artista hace clic en el enlace → lo lleva a registrarse → completa su perfil
+
+#### Métricas
+
+En **Métricas** ves estadísticas generales de la plataforma con gráficas: cantidad de artistas, distribución por estado, por género, etc.
 
 ---
 
@@ -208,11 +207,11 @@ Puedes generar enlaces de invitación para que artistas se registren:
 **¿Puedo registrarme sin que el administrador me agregue?**
 Sí. Cualquiera puede crear una cuenta en `/registro`. Tu perfil quedará como "Pendiente" hasta que el administrador lo apruebe.
 
+**¿Necesito confirmar mi correo al registrarme?**
+No. El registro es inmediato, entras directamente sin pasos de verificación.
+
 **¿Qué pasa si me registro con un correo que el admin ya usó para crearme?**
 El sistema vincula tu cuenta con el perfil existente. Verás toda la información que el admin ya cargó y podrás editarla.
-
-**¿Puedo usar Google y correo/contraseña?**
-Puedes elegir uno al registrarte. Si usas Google, no podrás cambiar tu correo o contraseña desde la plataforma (se gestiona desde tu cuenta de Google).
 
 **¿Por qué no aparezco en el catálogo?**
 Tu perfil debe estar **Aprobado** y **Activo** para aparecer. Si tu estado es "Pendiente", espera a que el administrador lo apruebe.
