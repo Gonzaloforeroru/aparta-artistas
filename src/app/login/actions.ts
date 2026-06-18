@@ -8,8 +8,7 @@ import { handlePostLogin } from "@/lib/auth/post-login";
 
 export async function signInWithGoogle(token?: string) {
   const supabase = await createClient();
-  const origin =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://aparta-artistas.vercel.app";
+  const origin = process.env.NEXT_PUBLIC_SITE_URL!;
 
   let redirectTo = `${origin}/auth/callback`;
   if (token) {
@@ -66,8 +65,7 @@ export async function signUpWithEmail(formData: FormData) {
   const name = formData.get("name") as string;
 
   const supabase = await createClient();
-  const origin =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://aparta-artistas.vercel.app";
+  const origin = process.env.NEXT_PUBLIC_SITE_URL!;
 
   const { data, error } = await supabase.auth.signUp({
     email,
