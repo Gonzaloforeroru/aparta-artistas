@@ -77,11 +77,12 @@ export async function signUpWithEmail(formData: FormData) {
   });
 
   if (error) {
+    console.error("[signUpWithEmail] Supabase error:", error.message);
     const message = error.message?.includes("already registered")
       ? "Este correo ya está registrado. Intenta iniciar sesión."
       : error.message?.includes("password")
         ? "La contraseña debe tener al menos 6 caracteres."
-        : "Error al crear la cuenta. Intenta de nuevo.";
+        : `Error: ${error.message}`;
     return { error: message };
   }
 
