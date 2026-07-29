@@ -34,20 +34,44 @@ export async function handlePostLogin(
   }
 
   // Step 0: Ensure profile exists (handles users created before trigger was set up)
-  await adminClient.from("profiles").upsert(
-    {
+  const adminEmailConfigured = !!process.env.ADMIN_EMAIL;
+  const isAdmin = isAdminEmail(email);
+
+  const { data: existingProfile } = await adminClient
+    .from("profiles")
+    .select("id, role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const displayName =
+    (user.user_metadata?.full_name as string | undefined) ??
+    email.split("@")[0];
+  const avatarUrl =
+    (user.user_metadata?.avatar_url as string | undefined) ?? null;
+
+  if (existingProfile) {
+    // Profile exists — only change role if ADMIN_EMAIL env var is configured.
+    // Without it we can't determine roles, so preserve whatever role is stored.
+    const updatedRole = adminEmailConfigured
+      ? (isAdmin ? "admin" : "artist")
+      : existingProfile.role;
+
+    await adminClient
+      .from("profiles")
+      .update({ role: updatedRole, display_name: displayName, avatar_url: avatarUrl })
+      .eq("id", user.id);
+  } else {
+    // New user — create profile
+    await adminClient.from("profiles").insert({
       id: user.id,
-      role: isAdminEmail(email) ? "admin" : "artist",
-      display_name:
-        (user.user_metadata?.full_name as string | undefined) ??
-        email.split("@")[0],
-      avatar_url: (user.user_metadata?.avatar_url as string | undefined) ?? null,
-    },
-    { onConflict: "id" }
-  );
+      role: isAdmin ? "admin" : "artist",
+      display_name: displayName,
+      avatar_url: avatarUrl,
+    });
+  }
 
   // Step 1: Admin email check → ensure single admin, redirect
-  if (isAdminEmail(email)) {
+  if (isAdmin) {
     // Downgrade any previous admins (only one admin allowed at a time)
     await adminClient
       .from("profiles")
@@ -55,6 +79,11 @@ export async function handlePostLogin(
       .eq("role", "admin")
       .neq("id", user.id);
 
+    return { redirectTo: "/admin" };
+  }
+
+  // If ADMIN_EMAIL not configured but user already has admin role, respect it
+  if (!adminEmailConfigured && existingProfile?.role === "admin") {
     return { redirectTo: "/admin" };
   }
 
