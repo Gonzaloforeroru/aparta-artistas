@@ -5,9 +5,9 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
  * Comparison is case-insensitive (LOWER on both sides).
  */
 export function isAdminEmail(email: string): boolean {
-  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminEmail = process.env.ADMIN_EMAIL?.trim();
   if (!adminEmail || !email) return false;
-  return email.toLowerCase() === adminEmail.toLowerCase();
+  return email.trim().toLowerCase() === adminEmail.toLowerCase();
 }
 
 /**
