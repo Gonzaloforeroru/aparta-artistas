@@ -94,9 +94,9 @@ export async function signUpWithEmail(formData: FormData) {
   // If auto-confirmed (session exists), run post-login flow immediately
   if (data.user && data.session) {
     const adminClient = createAdminClient();
-    await handlePostLogin(supabase, adminClient, data.user);
+    const { redirectTo } = await handlePostLogin(supabase, adminClient, data.user);
     revalidatePath("/", "layout");
-    redirect("/artista");
+    redirect(redirectTo);
   }
 
   // Email confirmation required — redirect to success page

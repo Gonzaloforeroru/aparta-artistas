@@ -58,11 +58,12 @@ export async function handlePostLogin(
     return { redirectTo: "/admin" };
   }
 
-  // Step 2: Match existing artist by email (case-insensitive via ilike)
+  // Step 2: Find or create artist record by email (case-insensitive)
+  const normalizedEmail = email.toLowerCase();
   const { data: existingArtist } = await adminClient
     .from("artists")
     .select("id")
-    .ilike("email", email)
+    .ilike("email", normalizedEmail)
     .maybeSingle();
 
   if (existingArtist) {
@@ -72,23 +73,36 @@ export async function handlePostLogin(
       .update({ user_id: user.id })
       .eq("id", (existingArtist as { id: string }).id);
   } else {
-    // Step 3: Create empty artist record for new users
+    // Step 3: Create artist record — use upsert to prevent duplicate email errors
     const displayName =
       (user.user_metadata?.full_name as string | undefined) ??
       email.split("@")[0];
 
-    await adminClient.from("artists").insert({
-      name: displayName,
-      email: email.toLowerCase(),
-      user_id: user.id,
-      city: "",
-      type: "Solista",
-      genre: "Pop",
-      phone: "",
-      price: 0,
-      duration: "",
-      status: "Pendiente",
-    });
+    const { error: artistError } = await adminClient.from("artists").upsert(
+      {
+        name: displayName,
+        email: normalizedEmail,
+        user_id: user.id,
+        city: "",
+        type: "Solista",
+        genre: "Pop",
+        phone: "",
+        price: 0,
+        duration: "",
+        status: "Pendiente",
+      },
+      { onConflict: "email", ignoreDuplicates: true }
+    );
+
+    // If upsert failed (e.g. constraint violation), try linking by user_id
+    if (artistError) {
+      console.error("[handlePostLogin] artist upsert error:", artistError.message);
+      // Attempt to link existing record by email as fallback
+      await adminClient
+        .from("artists")
+        .update({ user_id: user.id })
+        .ilike("email", normalizedEmail);
+    }
   }
 
   // Step 4: Invitation token handling
