@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { getMyArtistProfile } from "@/app/artista/actions";
 import { ensureArtistProfile } from "@/lib/auth/ensure-artist";
+import { isProfileComplete } from "@/app/artista/utils";
 import { formatPrice } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,6 +109,13 @@ export default async function ArtistaProfilePage() {
 
   if (!artist) {
     notFound();
+  }
+
+  // Completeness guard. It lives here, not in the layout: a layout cannot tell
+  // which route is rendering, and the header-based workaround it used broke on
+  // Vercel and made /artista/completar redirect to itself.
+  if (!isProfileComplete(artist)) {
+    redirect("/artista/completar");
   }
 
   const status = statusConfig[artist.status ?? "Pendiente"] ?? statusConfig.Pendiente;

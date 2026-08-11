@@ -1,10 +1,8 @@
 import { redirect } from "next/navigation"
-import { headers } from "next/headers"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { getMyArtistProfile } from "@/app/artista/actions"
 import { ensureArtistProfile } from "@/lib/auth/ensure-artist"
-import { isProfileComplete } from "@/app/artista/utils"
 import { signOut } from "@/app/login/actions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -81,14 +79,17 @@ export default async function ArtistaLayout({
     )
   }
 
-  // ─── 4. Profile completeness guard ───
-  const headersList = await headers()
-  const pathname = headersList.get("x-pathname") || ""
-  const isCompletarPage = pathname.startsWith("/artista/completar")
-
-  if (!isCompletarPage && !isProfileComplete(artist)) {
-    redirect("/artista/completar")
-  }
+  // ─── 4. Profile completeness ───
+  // The guard used to live here and skipped itself on /artista/completar by
+  // reading the x-pathname header injected by the middleware. That header does
+  // not survive on Vercel, so isCompletarPage was always false and
+  // /artista/completar redirected to itself forever — a blank screen and ~3
+  // requests per second.
+  //
+  // A layout has no reliable way to know which route is rendering, so the
+  // guard now lives in each page, which does know. See /artista and
+  // /artista/editar. /artista/completar deliberately has none: it is the
+  // destination.
 
   // ─── Display info ───
   const displayName =
