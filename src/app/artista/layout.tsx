@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { getMyArtistProfile } from "@/app/artista/actions"
+import { ensureArtistProfile } from "@/lib/auth/ensure-artist"
 import { isProfileComplete } from "@/app/artista/utils"
 import { signOut } from "@/app/login/actions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -43,10 +44,41 @@ export default async function ArtistaLayout({
   }
 
   // ─── 3. Artist profile existence ───
-  const artist = await getMyArtistProfile()
+  // NEVER redirect to /login from here. The session is valid, so /login sends
+  // the user straight back to /artista and the browser spins in an infinite
+  // redirect loop with no visible error. If the record is missing we create it
+  // on the spot; only a genuine write failure shows an error screen.
+  let artist = await getMyArtistProfile()
 
   if (!artist) {
-    redirect("/login")
+    artist = await ensureArtistProfile()
+  }
+
+  if (!artist) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md space-y-4 rounded-lg border p-6 text-center">
+          <h1 className="text-lg font-semibold tracking-tight">
+            No pudimos cargar tu perfil
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Tu sesión es válida, pero no conseguimos crear tu ficha de artista.
+            Vuelve a intentarlo en unos segundos; si el problema continúa,
+            escríbenos.
+          </p>
+          <div className="flex justify-center gap-2">
+            <Button render={<Link href="/artista" />} size="sm">
+              Reintentar
+            </Button>
+            <form action={signOut}>
+              <Button variant="outline" size="sm" type="submit">
+                Cerrar sesión
+              </Button>
+            </form>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // ─── 4. Profile completeness guard ───

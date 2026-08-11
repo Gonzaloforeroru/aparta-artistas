@@ -1,4 +1,5 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { buildNewArtistRow } from "@/lib/auth/ensure-artist";
 
 /**
  * Checks if the given email matches the configured ADMIN_EMAIL env var.
@@ -22,7 +23,7 @@ export function isAdminEmail(email: string): boolean {
  * Uses adminClient (service role) for all DB mutations to bypass RLS.
  */
 export async function handlePostLogin(
-  _supabase: SupabaseClient,
+  supabase: SupabaseClient,
   adminClient: SupabaseClient,
   user: User,
   token?: string | null
@@ -37,38 +38,25 @@ export async function handlePostLogin(
   const adminEmailConfigured = !!process.env.ADMIN_EMAIL;
   const isAdmin = isAdminEmail(email);
 
-  const { data: existingProfile } = await adminClient
-    .from("profiles")
-    .select("id, role")
-    .eq("id", user.id)
-    .maybeSingle();
-
   const displayName =
     (user.user_metadata?.full_name as string | undefined) ??
     email.split("@")[0];
   const avatarUrl =
     (user.user_metadata?.avatar_url as string | undefined) ?? null;
 
-  if (existingProfile) {
-    // Profile exists — only change role if ADMIN_EMAIL env var is configured.
-    // Without it we can't determine roles, so preserve whatever role is stored.
-    const updatedRole = adminEmailConfigured
-      ? (isAdmin ? "admin" : "artist")
-      : existingProfile.role;
-
-    await adminClient
-      .from("profiles")
-      .update({ role: updatedRole, display_name: displayName, avatar_url: avatarUrl })
-      .eq("id", user.id);
-  } else {
-    // New user — create profile
-    await adminClient.from("profiles").insert({
+  // A single upsert covers both "profile missing" and "profile exists".
+  // `role` is only written when ADMIN_EMAIL is configured: without it we cannot
+  // tell admins from artists, and an upsert that omits the column leaves the
+  // stored role untouched (new rows fall back to the column default 'artist').
+  await adminClient.from("profiles").upsert(
+    {
       id: user.id,
-      role: isAdmin ? "admin" : "artist",
       display_name: displayName,
       avatar_url: avatarUrl,
-    });
-  }
+      ...(adminEmailConfigured ? { role: isAdmin ? "admin" : "artist" } : {}),
+    },
+    { onConflict: "id" }
+  );
 
   // Step 1: Admin email check → ensure single admin, redirect
   if (isAdmin) {
@@ -82,9 +70,27 @@ export async function handlePostLogin(
     return { redirectTo: "/admin" };
   }
 
-  // If ADMIN_EMAIL not configured but user already has admin role, respect it
-  if (!adminEmailConfigured && existingProfile?.role === "admin") {
-    return { redirectTo: "/admin" };
+  // If ADMIN_EMAIL is not configured we cannot detect admins by email, so fall
+  // back to the role already stored in the profile. Read through the
+  // user-scoped client (RLS policy `select_own_profile`) to keep the
+  // service-role round trips down to one for the profile step.
+  if (!adminEmailConfigured) {
+    try {
+      const { data: storedProfile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if ((storedProfile as { role?: string } | null)?.role === "admin") {
+        return { redirectTo: "/admin" };
+      }
+    } catch (error) {
+      console.error(
+        "[handlePostLogin] could not read stored role:",
+        error instanceof Error ? error.message : error
+      );
+    }
   }
 
   // Step 2: Find or create artist record by email (case-insensitive)
@@ -102,31 +108,24 @@ export async function handlePostLogin(
       .update({ user_id: user.id })
       .eq("id", (existingArtist as { id: string }).id);
   } else {
-    // Step 3: Create artist record — use upsert to prevent duplicate email errors
-    const displayName =
-      (user.user_metadata?.full_name as string | undefined) ??
-      email.split("@")[0];
+    // Step 3: Create the artist record.
+    //
+    // This used to be an upsert with `{ onConflict: "email" }`. The only unique
+    // index on the column is `idx_artists_email`, declared on the EXPRESSION
+    // `lower(email)`, and Postgres will not match `ON CONFLICT (email)` against
+    // an expression index — every call died with 42P10 ("no unique or exclusion
+    // constraint matching the ON CONFLICT specification"). The row was never
+    // created and the user ended up with a valid session and no profile: the
+    // /artista ↔ /login redirect loop.
+    // A plain insert is safe here — the ilike lookup above already ruled out a
+    // record with this email.
+    const { error: artistError } = await adminClient
+      .from("artists")
+      .insert(buildNewArtistRow(user));
 
-    const { error: artistError } = await adminClient.from("artists").upsert(
-      {
-        name: displayName,
-        email: normalizedEmail,
-        user_id: user.id,
-        city: "",
-        type: "Solista",
-        genre: "Pop",
-        phone: "",
-        price: 0,
-        duration: "",
-        status: "Pendiente",
-      },
-      { onConflict: "email", ignoreDuplicates: true }
-    );
-
-    // If upsert failed (e.g. constraint violation), try linking by user_id
+    // If the insert failed, fall back to claiming a record with the same email
     if (artistError) {
-      console.error("[handlePostLogin] artist upsert error:", artistError.message);
-      // Attempt to link existing record by email as fallback
+      console.error("[handlePostLogin] artist insert error:", artistError.message);
       await adminClient
         .from("artists")
         .update({ user_id: user.id })
