@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -136,8 +137,17 @@ export function InvitacionesContent({ invitations, associations }: InvitacionesC
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-xs text-muted-foreground">Tipo</Label>
                   <Select value={kind} onValueChange={(v) => setKind(v as "personal" | "campaign")}>
-                    <SelectTrigger>
-                      <SelectValue />
+                    <SelectTrigger className="w-full">
+                      {/*
+                        Se pinta el texto a mano en vez de dejar <SelectValue />
+                        vacio: el Select de Base UI muestra el VALOR crudo
+                        ("personal", "none") en lugar de la etiqueta del item.
+                      */}
+                      <SelectValue>
+                        {kind === "personal"
+                          ? "Personal (un solo uso)"
+                          : "Campaña (múltiples usos)"}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="personal">Personal (un solo uso)</SelectItem>
@@ -156,19 +166,53 @@ export function InvitacionesContent({ invitations, associations }: InvitacionesC
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs text-muted-foreground">Asociación (opcional)</Label>
-                  <Select value={associationId} onValueChange={(v) => setAssociationId(v ?? "none")}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sin asociación" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sin asociación</SelectItem>
-                      {activeAssociations.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="flex flex-col gap-1.5 sm:col-span-3">
+                  <Label className="text-xs text-muted-foreground">
+                    Insignia de asociación
+                  </Label>
+
+                  {activeAssociations.length === 0 ? (
+                    /*
+                      Sin asociaciones creadas el desplegable solo ofrecia "Sin
+                      asociacion", y no habia forma de saber que primero hay que
+                      crearlas en otra pantalla. Se dice explicitamente.
+                    */
+                    <div className="rounded-lg border border-dashed border-white/15 px-3 py-2.5 text-xs text-muted-foreground">
+                      Todavía no hay ninguna asociación creada.{" "}
+                      <Link
+                        href="/admin/asociaciones"
+                        className="font-semibold text-[var(--cta)] underline underline-offset-2"
+                      >
+                        Crea la primera
+                      </Link>{" "}
+                      y podrás asignarla a este enlace.
+                    </div>
+                  ) : (
+                    <>
+                      <Select
+                        value={associationId}
+                        onValueChange={(v) => setAssociationId(v ?? "none")}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue>
+                            {activeAssociations.find((a) => a.id === associationId)?.name ??
+                              "Sin insignia"}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Sin insignia</SelectItem>
+                          {activeAssociations.map((a) => (
+                            <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        Quien se registre por este enlace queda avalado por la
+                        asociación elegida y le sale su insignia. Sin insignia, se
+                        registra como cualquier otro artista.
+                      </p>
+                    </>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-xs text-muted-foreground">Días de validez</Label>
