@@ -43,13 +43,30 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="[--header-height:3.5rem] min-h-screen">
-      <SidebarProvider className="flex flex-col min-h-screen">
+    /*
+      h-screen y NO min-h-screen.
+
+      Con min-h-screen la cadena de contenedores crece con el contenido, asi que
+      en una tabla larga quien acababa desplazandose era el documento entero y
+      se llevaba la barra lateral por delante: parecia pegada al contenido. El
+      overflow-y-auto de mas abajo no llegaba a activarse nunca porque su padre
+      no tenia altura acotada.
+
+      Fijando la altura a la ventana, el unico que puede desplazarse es el
+      contenedor del contenido, y la barra lateral y la cabecera se quedan
+      quietas.
+
+      Los min-h-0 no son decorativos: un hijo flex tiene min-height:auto por
+      defecto y se niega a encogerse por debajo de su contenido, asi que sin
+      ellos el scroll interno sigue sin funcionar aunque el alto este fijado.
+    */
+    <div className="[--header-height:3.5rem] h-screen overflow-hidden">
+      <SidebarProvider className="flex h-screen flex-col">
         <SiteHeader />
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex min-h-0 flex-1 overflow-hidden">
           <AppSidebar user={adminUser} pendingCount={pendingCount ?? 0} />
-          <SidebarInset>
-            <div className="relative flex-1 overflow-y-auto overflow-x-hidden">
+          <SidebarInset className="min-h-0">
+            <div className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
               <div className="pointer-events-none absolute inset-0 h-full w-full">
                 <div className="absolute -top-[300px] -left-[200px] h-[800px] w-[800px] rounded-full bg-[#6E2FE3] opacity-20 blur-[150px]" />
                 <div className="absolute top-[40%] right-[-100px] h-[600px] w-[600px] rounded-full bg-[#F31A7C] opacity-15 blur-[140px]" />
