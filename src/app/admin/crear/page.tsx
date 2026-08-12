@@ -1,4 +1,5 @@
 import { getArtistById } from "@/lib/queries/artists";
+import { getAssociations } from "@/lib/queries/associations";
 import { CrearContent } from "./crear-content";
 
 export default async function AdminCrearPage({
@@ -7,7 +8,10 @@ export default async function AdminCrearPage({
   searchParams: Promise<{ id?: string }>;
 }) {
   const { id } = await searchParams;
-  const existingArtist = id ? await getArtistById(id) : null;
+  const [existingArtist, associations] = await Promise.all([
+    id ? getArtistById(id) : Promise.resolve(null),
+    getAssociations(),
+  ]);
 
-  return <CrearContent existingArtist={existingArtist} />;
+  return <CrearContent existingArtist={existingArtist} associations={associations} />;
 }

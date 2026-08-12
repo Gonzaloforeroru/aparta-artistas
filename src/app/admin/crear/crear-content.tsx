@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { cities, artistTypes, genres } from "@/lib/data";
 import type { Tables } from "@/lib/supabase/database.types";
+import type { Association } from "@/lib/queries/associations";
 import { createArtist, updateArtist, removeArtistPhoto } from "@/app/admin/actions";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon, Upload01Icon, BubbleChatIcon, Delete01Icon } from "@hugeicons/core-free-icons";
@@ -22,12 +23,21 @@ import Link from "next/link";
 
 type Artist = Tables<"artists">;
 
-export function CrearContent({ existingArtist }: { existingArtist: Artist | null }) {
+interface CrearContentProps {
+  existingArtist: Artist | null;
+  associations: Association[];
+}
+
+export function CrearContent({ existingArtist, associations }: CrearContentProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [photoPreview, setPhotoPreview] = useState<string | null>(existingArtist?.photo ?? null);
   const [deletePhoto, setDeletePhoto] = useState(false);
+  const [associationId, setAssociationId] = useState<string>(
+    existingArtist?.association_id ?? "none",
+  );
   const isEditing = !!existingArtist;
+  const activeAssociations = associations.filter((a) => a.active);
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -38,6 +48,7 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
     if (deletePhoto) {
       formData.set("deletePhoto", "true");
     }
+    formData.set("association_id", associationId);
     startTransition(async () => {
       try {
         if (isEditing) {
@@ -181,6 +192,28 @@ export function CrearContent({ existingArtist }: { existingArtist: Artist | null
                         <SelectItem value="Pendiente">Pendiente</SelectItem>
                         <SelectItem value="Aprobado">Aprobado</SelectItem>
                         <SelectItem value="Rechazado">Rechazado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label>Asociación</Label>
+                    <Select
+                      value={associationId}
+                      onValueChange={(v) => setAssociationId(v ?? "none")}
+                    >
+                      <SelectTrigger>
+                        <SelectValue>
+                          {activeAssociations.find((a) => a.id === associationId)?.name
+                            ?? "Sin asociación"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin asociación</SelectItem>
+                        {activeAssociations.map((a) => (
+                          <SelectItem key={a.id} value={a.id}>
+                            {a.name}{a.shortName ? ` (${a.shortName})` : ""}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

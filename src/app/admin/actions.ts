@@ -20,6 +20,11 @@ export async function createArtist(formData: FormData) {
   const photoFile = formData.get("photo") as File | null;
 
   // Insert artist first (to get ID for photo path)
+  // association_id: "none" o vacío => sin asociación; UUID válido => asignar
+  const rawAssocCreate = formData.get("association_id") as string | null;
+  const assocIdCreate =
+    rawAssocCreate && rawAssocCreate !== "none" ? rawAssocCreate : null;
+
    const { data: artistData, error } = await supabase
      .from("artists")
      .insert({
@@ -37,6 +42,7 @@ export async function createArtist(formData: FormData) {
        youtube: (formData.get("youtube") as string) || null,
        spotify: (formData.get("spotify") as string) || null,
        website: (formData.get("website") as string) || null,
+       association_id: assocIdCreate,
        created_by: user?.id,
      })
      .select()
@@ -91,6 +97,11 @@ export async function updateArtist(id: string, formData: FormData) {
     }
   }
 
+  // association_id: "none" o vacío => quitar asociación; UUID válido => asignar
+  const rawAssociation = formData.get("association_id") as string | null;
+  const associationId =
+    rawAssociation && rawAssociation !== "none" ? rawAssociation : null;
+
    const { error } = await supabase
      .from("artists")
      .update({
@@ -109,6 +120,7 @@ export async function updateArtist(id: string, formData: FormData) {
        spotify: (formData.get("spotify") as string) || null,
        website: (formData.get("website") as string) || null,
        photo: photoUrl,
+       association_id: associationId,
      })
      .eq("id", id);
 
@@ -213,6 +225,30 @@ export async function rejectArtist(id: string) {
   if (error) throw error;
   revalidatePath("/admin/aprobaciones");
   revalidatePath("/admin/lista");
+}
+
+/**
+ * Asigna o quita la asociación de un artista.
+ *
+ * Se usa desde la tabla de artistas en /admin/lista como acción rápida, sin
+ * navegar al formulario completo de edición.
+ */
+export async function updateArtistAssociation(
+  artistId: string,
+  associationId: string | null,
+): Promise<AssociationActionResult> {
+  const { supabase, denied } = await requireAssociationAdmin();
+  if (denied) return { success: false, error: denied };
+
+  const { error } = await supabase
+    .from("artists")
+    .update({ association_id: associationId })
+    .eq("id", artistId);
+
+  if (error) return { success: false, error: error.message };
+  revalidatePath("/admin/lista");
+  revalidatePath("/catalogo");
+  return { success: true };
 }
 
 // ═══════════════════════════════════════════
@@ -634,6 +670,7 @@ function revalidateAssociationPaths() {
 
 export async function createAssociation(input: {
   name: string;
+  shortName?: string | null;
   color?: string | null;
   logoUrl?: string | null;
 }): Promise<AssociationActionResult> {
@@ -643,6 +680,12 @@ export async function createAssociation(input: {
   const trimmed = input.name.trim();
   if (trimmed.length < 2 || trimmed.length > 100)
     return { success: false, error: "El nombre debe tener entre 2 y 100 caracteres." };
+
+  // Sigla: recortar espacios; si queda vacío guardar null.
+  // El CHECK de la base exige entre 1 y 12 caracteres si no es null.
+  const shortName = input.shortName?.trim() || null;
+  if (shortName && shortName.length > 12)
+    return { success: false, error: "La sigla no puede tener más de 12 caracteres." };
 
   const { data: slugData, error: slugError } = await supabase.rpc("slugify", {
     p_text: trimmed,
@@ -656,6 +699,7 @@ export async function createAssociation(input: {
   const { error } = await supabase.from("associations").insert({
     name: trimmed,
     slug: slugData as string,
+    short_name: shortName,
     color: input.color ?? null,
     logo_url: input.logoUrl ?? null,
     created_by: userId,
@@ -697,12 +741,19 @@ export async function renameAssociation(
 
 export async function updateAssociationPresentation(
   id: string,
-  input: { color?: string | null; logoUrl?: string | null },
+  input: { shortName?: string | null; color?: string | null; logoUrl?: string | null },
 ): Promise<AssociationActionResult> {
   const { supabase, denied } = await requireAssociationAdmin();
   if (denied) return { success: false, error: denied };
 
   const update: Record<string, string | null> = {};
+
+  if (input.shortName !== undefined) {
+    const sn = input.shortName?.trim() || null;
+    if (sn && sn.length > 12)
+      return { success: false, error: "La sigla no puede tener más de 12 caracteres." };
+    update.short_name = sn;
+  }
   if (input.color !== undefined) update.color = input.color ?? null;
   if (input.logoUrl !== undefined) update.logo_url = input.logoUrl ?? null;
 

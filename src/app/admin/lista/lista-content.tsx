@@ -16,12 +16,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cities, artistTypes, formatPrice } from "@/lib/data";
 import type { Tables, ArtistStatus } from "@/lib/supabase/database.types";
-import { deleteArtist, toggleArtistActive } from "@/app/admin/actions";
+import { deleteArtist, toggleArtistActive, updateArtistAssociation } from "@/app/admin/actions";
+import type { Association } from "@/lib/queries/associations";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Search01Icon, Add01Icon, PencilEdit01Icon, Delete02Icon,
   ToggleOffIcon, ToggleOnIcon, Upload01Icon, Mail01Icon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import Image from "next/image";
 import Link from "next/link";
@@ -37,15 +39,47 @@ function StatusBadge({ status }: { status: ArtistStatus }) {
   return (<Badge variant="secondary" className={variants[status].className}>{status}</Badge>);
 }
 
-export function ListaContent({ artists }: { artists: Artist[] }) {
+interface ListaContentProps {
+  artists: Artist[];
+  associations: Association[];
+}
+
+export function ListaContent({ artists, associations }: ListaContentProps) {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [assocTarget, setAssocTarget] = useState<Artist | null>(null);
+  const [selectedAssocId, setSelectedAssocId] = useState<string>("none");
   const [isPending, startTransition] = useTransition();
   const perPage = 10;
+
+  const activeAssociations = associations.filter((a) => a.active);
+
+  /** Mapa para resolución rápida de association_id → nombre/sigla */
+  const assocMap = new Map(associations.map((a) => [a.id, a]));
+
+  function openAssocDialog(artist: Artist) {
+    setAssocTarget(artist);
+    setSelectedAssocId(artist.association_id ?? "none");
+  }
+
+  function handleAssocSave() {
+    if (!assocTarget) return;
+    const artist = assocTarget;
+    const newId = selectedAssocId !== "none" ? selectedAssocId : null;
+    startTransition(async () => {
+      const result = await updateArtistAssociation(artist.id, newId);
+      if (result.success) {
+        toast.success("Asociación actualizada");
+      } else {
+        toast.error(result.error);
+      }
+      setAssocTarget(null);
+    });
+  }
 
   const filtered = artists.filter((artist) => {
     const matchesSearch = artist.name.toLowerCase().includes(search.toLowerCase());
@@ -109,21 +143,38 @@ export function ListaContent({ artists }: { artists: Artist[] }) {
         </div>
         <div className="flex gap-3">
           <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v ?? "all"); setPage(1); }}>
-            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Profesión" /></SelectTrigger>
+              {/*
+                El Select de Base UI pinta el VALOR crudo cuando <SelectValue />
+                va sin hijos: estos tres filtros mostraban literalmente "all".
+                Se les pasa el texto explicito.
+              */}
+              <SelectTrigger className="w-[160px]">
+                <SelectValue>
+                  {typeFilter === "all" ? "Profesión" : typeFilter}
+                </SelectValue>
+              </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas las profesiones</SelectItem>
               {artistTypes.map((t) => (<SelectItem key={t} value={t}>{t}</SelectItem>))}
             </SelectContent>
           </Select>
           <Select value={cityFilter} onValueChange={(v) => { setCityFilter(v ?? "all"); setPage(1); }}>
-            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Ciudad" /></SelectTrigger>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue>
+                  {cityFilter === "all" ? "Ciudad" : cityFilter}
+                </SelectValue>
+              </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas las ciudades</SelectItem>
               {cities.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v ?? "all"); setPage(1); }}>
-            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue>
+                  {statusFilter === "all" ? "Estado" : statusFilter}
+                </SelectValue>
+              </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="Aprobado">Aprobado</SelectItem>
@@ -144,6 +195,7 @@ export function ListaContent({ artists }: { artists: Artist[] }) {
               <TableHead>Género</TableHead>
               <TableHead>Ciudad</TableHead>
               <TableHead>Precio</TableHead>
+              <TableHead>Asociación</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
@@ -165,6 +217,28 @@ export function ListaContent({ artists }: { artists: Artist[] }) {
                 <TableCell>{artist.genre}</TableCell>
                 <TableCell>{artist.city}</TableCell>
                 <TableCell>{formatPrice(artist.price)}</TableCell>
+                <TableCell>
+                  {artist.association_id ? (
+                    <Badge
+                      variant="secondary"
+                      className="cursor-pointer text-xs"
+                      onClick={() => openAssocDialog(artist)}
+                    >
+                      {(() => {
+                        const a = assocMap.get(artist.association_id);
+                        return a ? (a.shortName ?? a.name) : "—";
+                      })()}
+                    </Badge>
+                  ) : (
+                    <button
+                      type="button"
+                      className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors"
+                      onClick={() => openAssocDialog(artist)}
+                    >
+                      Asignar
+                    </button>
+                  )}
+                </TableCell>
                 <TableCell><StatusBadge status={artist.status} /></TableCell>
                  <TableCell>
                    <div className="flex items-center justify-end gap-1">
@@ -207,6 +281,52 @@ export function ListaContent({ artists }: { artists: Artist[] }) {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={() => deleteTarget && handleDelete(deleteTarget)} disabled={isPending}>
               Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Diálogo de asignación de asociación ── */}
+      <AlertDialog
+        open={assocTarget !== null}
+        onOpenChange={(open) => { if (!open) setAssocTarget(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              <HugeiconsIcon icon={UserGroupIcon} className="mr-2 inline-block size-5 align-text-bottom" />
+              Asociación de {assocTarget?.name}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Elige la asociación que avala a este artista, o selecciona
+              &quot;Sin asociación&quot; para quitarla.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Select
+              value={selectedAssocId}
+              onValueChange={(v) => setSelectedAssocId(v ?? "none")}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {activeAssociations.find((a) => a.id === selectedAssocId)?.name
+                    ?? "Sin asociación"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sin asociación</SelectItem>
+                {activeAssociations.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.name}{a.shortName ? ` (${a.shortName})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAssocSave} disabled={isPending}>
+              Guardar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -52,6 +52,8 @@ type ArtistRowWithRelations = Tables<"artists"> & {
 export type AssociationRef = {
   id: string;
   name: string;
+  /** Sigla para sitios estrechos. Si es null se usa `name`. */
+  short_name: string | null;
   color: string | null;
 };
 
@@ -66,7 +68,7 @@ export async function getApprovedArtistsWithTags(): Promise<ArtistWithTags[]> {
   const { data, error } = await supabase
     .from("artists")
     .select(
-      "*, municipality:municipalities(code, name, department_code), association:associations(id, name, color), artist_tags(status, tags(id, kind, name, slug, color))",
+      "*, municipality:municipalities(code, name, department_code), association:associations(id, name, short_name, color), artist_tags(status, tags(id, kind, name, slug, color))",
     )
     .eq("status", "Aprobado")
     .eq("active", true)

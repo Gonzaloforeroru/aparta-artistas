@@ -42,11 +42,13 @@ function ColorDot({ color }: { color: string | null }) {
 export function AsociacionesContent({ associations }: { associations: Association[] }) {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
+  const [newShortName, setNewShortName] = useState("");
   const [newColor, setNewColor] = useState("");
   const [newLogoUrl, setNewLogoUrl] = useState("");
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [editShortName, setEditShortName] = useState("");
   const [editColor, setEditColor] = useState("");
   const [editLogoUrl, setEditLogoUrl] = useState("");
 
@@ -58,12 +60,14 @@ export function AsociacionesContent({ associations }: { associations: Associatio
     startTransition(async () => {
       const result = await createAssociation({
         name: newName,
+        shortName: newShortName || null,
         color: newColor || null,
         logoUrl: newLogoUrl || null,
       });
       if (result.success) {
         toast.success("Asociación creada");
         setNewName("");
+        setNewShortName("");
         setNewColor("");
         setNewLogoUrl("");
         setShowCreate(false);
@@ -76,6 +80,7 @@ export function AsociacionesContent({ associations }: { associations: Associatio
   function startEdit(assoc: Association) {
     setEditingId(assoc.id);
     setEditName(assoc.name);
+    setEditShortName(assoc.shortName ?? "");
     setEditColor(assoc.color ?? "");
     setEditLogoUrl(assoc.logoUrl ?? "");
   }
@@ -96,10 +101,12 @@ export function AsociacionesContent({ associations }: { associations: Associatio
         }
       }
 
+      const shortNameChanged = (editShortName || null) !== (assoc.shortName ?? null);
       const colorChanged = (editColor || null) !== (assoc.color ?? null);
       const logoChanged = (editLogoUrl || null) !== (assoc.logoUrl ?? null);
-      if (colorChanged || logoChanged) {
+      if (shortNameChanged || colorChanged || logoChanged) {
         const result = await updateAssociationPresentation(assoc.id, {
+          shortName: editShortName || null,
           color: editColor || null,
           logoUrl: editLogoUrl || null,
         });
@@ -163,6 +170,19 @@ export function AsociacionesContent({ associations }: { associations: Associatio
               />
             </div>
             <div className="flex flex-col gap-1.5">
+              <Label className="text-xs text-muted-foreground">Sigla (opcional)</Label>
+              <Input
+                placeholder="Ej: CUC"
+                value={newShortName}
+                onChange={(e) => setNewShortName(e.target.value)}
+                maxLength={12}
+                className="w-[100px] font-mono text-xs"
+              />
+              <p className="text-[11px] text-muted-foreground leading-tight">
+                Se usa en la tarjeta del catálogo cuando el nombre es largo
+              </p>
+            </div>
+            <div className="flex flex-col gap-1.5">
               <Label className="text-xs text-muted-foreground">Color (hex)</Label>
               <div className="flex items-center gap-2">
                 <Input
@@ -211,6 +231,7 @@ export function AsociacionesContent({ associations }: { associations: Associatio
           <TableHeader>
             <TableRow>
               <TableHead>Nombre</TableHead>
+              <TableHead className="w-[90px]">Sigla</TableHead>
               <TableHead className="w-[60px]">Color</TableHead>
               <TableHead className="w-[80px] text-center">Artistas</TableHead>
               <TableHead className="w-[80px]">Estado</TableHead>
@@ -220,7 +241,7 @@ export function AsociacionesContent({ associations }: { associations: Associatio
           <TableBody>
             {associations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                   No hay asociaciones registradas
                 </TableCell>
               </TableRow>
@@ -233,6 +254,15 @@ export function AsociacionesContent({ associations }: { associations: Associatio
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
                         className="h-8 text-sm"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        value={editShortName}
+                        onChange={(e) => setEditShortName(e.target.value)}
+                        placeholder="Sigla"
+                        maxLength={12}
+                        className="h-8 w-[80px] font-mono text-xs"
                       />
                     </TableCell>
                     <TableCell>
@@ -289,6 +319,9 @@ export function AsociacionesContent({ associations }: { associations: Associatio
                 ) : (
                   <TableRow key={assoc.id} className={!assoc.active ? "opacity-50" : ""}>
                     <TableCell className="font-medium">{assoc.name}</TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">
+                      {assoc.shortName ?? <span className="text-muted-foreground/50">—</span>}
+                    </TableCell>
                     <TableCell><ColorDot color={assoc.color} /></TableCell>
                     <TableCell className="text-center tabular-nums text-sm text-muted-foreground">
                       {assoc.artistCount}

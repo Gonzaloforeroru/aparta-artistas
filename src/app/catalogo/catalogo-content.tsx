@@ -31,6 +31,65 @@ import type { Tag } from "@/lib/queries/tags";
  * artista. Poner a true para reactivarlo.
  */
 const MOSTRAR_FILTRO_INSTRUMENTO = false;
+
+/**
+ * Insignia de la asociacion que avala al artista.
+ *
+ * Muestra la sigla si la hay, porque el nombre real no cabe: "Corporación
+ * Universidad de la Costa" se truncaba a mitad y no se entendia nada.
+ *
+ * El nombre completo tiene que seguir siendo alcanzable, y ahi esta el detalle:
+ * en movil NO existe el hover, asi que un tooltip a secas dejaria la sigla como
+ * un jeroglifico en el sitio donde mas se consulta el catalogo. Por eso la
+ * insignia es un boton: al pulsarla revela el nombre unos segundos. En
+ * escritorio basta con pasar el raton.
+ */
+function AssociationBadge({
+  association,
+}: {
+  association: { id: string; name: string; short_name: string | null; color: string | null };
+}) {
+  const [revelado, setRevelado] = useState(false);
+  const c = association.color ?? "#2f7bf6";
+  const corto = association.short_name?.trim() || association.name;
+  const hayQueRevelar = corto !== association.name;
+
+  useEffect(() => {
+    if (!revelado) return;
+    const t = setTimeout(() => setRevelado(false), 3000);
+    return () => clearTimeout(t);
+  }, [revelado]);
+
+  return (
+    <button
+      type="button"
+      // Sin sigla no hay nada que revelar: se desactiva para no ofrecer una
+      // interaccion que no hace nada.
+      disabled={!hayQueRevelar}
+      onClick={() => setRevelado((v) => !v)}
+      title={`Avalado por ${association.name}`}
+      aria-label={`Avalado por ${association.name}`}
+      className="inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-[3px] text-[11px] font-semibold transition-[max-width] disabled:cursor-default"
+      style={{
+        color: c,
+        borderColor: `color-mix(in srgb, ${c} 45%, transparent)`,
+        backgroundColor: `color-mix(in srgb, ${c} 14%, transparent)`,
+      }}
+    >
+      <svg viewBox="0 0 24 24" className="size-3 shrink-0" aria-hidden="true">
+        <path
+          d="M5 13l4 4L19 7"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span className="truncate">{revelado ? association.name : corto}</span>
+    </button>
+  );
+}
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Search01Icon,
@@ -176,37 +235,7 @@ function ArtistCard({ artist }: { artist: ArtistWithTags }) {
           */}
           {association && (
             <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-              {[association].map((b) => {
-                const c = b.color ?? "#2f7bf6";
-                return (
-                  <span
-                    key={b.id}
-                    title={`Avalado por ${b.name}`}
-                    className="inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-[3px] text-[11px] font-semibold"
-                    style={{
-                      color: c,
-                      borderColor: `color-mix(in srgb, ${c} 45%, transparent)`,
-                      backgroundColor: `color-mix(in srgb, ${c} 14%, transparent)`,
-                    }}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="size-3 shrink-0"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M5 13l4 4L19 7"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <span className="truncate">{b.name}</span>
-                  </span>
-                );
-              })}
+              <AssociationBadge association={association} />
             </div>
           )}
         </div>
