@@ -21,6 +21,16 @@ import { Slider } from "@/components/ui/slider";
 import { formatPrice, DURATION_OPTIONS, COST_SLIDER_CONFIG } from "@/lib/data";
 import type { ArtistWithTags } from "@/lib/queries/artists";
 import type { Tag } from "@/lib/queries/tags";
+
+/**
+ * Muestra u oculta el combobox de instrumento en el catalogo.
+ *
+ * Desactivado a proposito: quien contrata busca "un solista de jazz", no "un
+ * saxofonista". Solo se oculta el CONTROL; el filtrado por ?profession= sigue
+ * vivo para no romper enlaces, y el eje sigue existiendo en el formulario del
+ * artista. Poner a true para reactivarlo.
+ */
+const MOSTRAR_FILTRO_INSTRUMENTO = false;
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Search01Icon,
@@ -145,8 +155,58 @@ function ArtistCard({ artist }: { artist: ArtistWithTags }) {
           </div>
 
           <p className="truncate text-[13px] font-medium text-[var(--text-muted)]">
-            {[cityLabel, ...badges.map((b) => b.name)].filter(Boolean).join(" · ")}
+            {cityLabel}
           </p>
+
+          {/*
+            Los avales van en su propia fila y con su color, no mezclados en la
+            linea meta junto a la ciudad.
+
+            Una insignia no es un descriptor del artista (como el genero): es el
+            respaldo de una institucion que responde por el, y el CHECK
+            tags_badge_always_official garantiza que nadie se la puede inventar.
+            Colgada de la linea de la ciudad se leia como un dato mas y, en
+            cuanto un artista acumulaba dos, la linea crecia sin control.
+
+            El color sale del propio tag para que cada institucion se reconozca
+            de un vistazo. Se usa color-mix y no un hex con alfa porque el color
+            lo teclea el admin y puede venir en cualquier formato CSS valido.
+          */}
+          {badges.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              {badges.map((b) => {
+                const c = b.color ?? "#2f7bf6";
+                return (
+                  <span
+                    key={b.id}
+                    title={`Avalado por ${b.name}`}
+                    className="inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-[3px] text-[11px] font-semibold"
+                    style={{
+                      color: c,
+                      borderColor: `color-mix(in srgb, ${c} 45%, transparent)`,
+                      backgroundColor: `color-mix(in srgb, ${c} 14%, transparent)`,
+                    }}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="size-3 shrink-0"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M5 13l4 4L19 7"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className="truncate">{b.name}</span>
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/*
@@ -752,13 +812,23 @@ function CatalogoInner({ artists, tagsByKind }: Props) {
           counts={tagCounts}
           onToggle={(slug) => toggleInParam("genre", slug)}
         />
-        <TagCombobox
-          label="Instrumento"
-          tags={tagsByKind.profession}
-          selected={selectedProfessions}
-          counts={tagCounts}
-          onToggle={(slug) => toggleInParam("profession", slug)}
-        />
+        {/*
+          Filtro por instrumento desactivado de momento: casi nadie busca "un
+          saxofonista", busca "un solista de jazz". Se oculta solo el control,
+          NO el filtrado: el eje sigue en la base y en el formulario del
+          artista, y un enlace con ?profession= sigue funcionando y se puede
+          quitar desde los chips de filtros activos. Poner a true para
+          reactivarlo.
+        */}
+        {MOSTRAR_FILTRO_INSTRUMENTO && (
+          <TagCombobox
+            label="Instrumento"
+            tags={tagsByKind.profession}
+            selected={selectedProfessions}
+            counts={tagCounts}
+            onToggle={(slug) => toggleInParam("profession", slug)}
+          />
+        )}
       </div>
 
       {/* ── Chips de filtros activos + limpiar ──────── */}
