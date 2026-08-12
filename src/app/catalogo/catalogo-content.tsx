@@ -84,7 +84,9 @@ function ArtistCard({ artist }: { artist: ArtistWithTags }) {
   // El municipio oficial DANE manda; artist.city queda como respaldo para los
   // registros que todavia no se han migrado.
   const cityLabel = artist.municipality?.name ?? artist.city;
-  const badges = artist.tags.filter((t) => t.kind === "badge");
+  // La insignia ya no es un tag: es la asociacion que avala al artista y llega
+  // por su propia relacion. Una como maximo (decision de producto).
+  const association = artist.association;
   const typeTags = artist.tags.filter((t) => t.kind === "artist_type");
 
   /**
@@ -131,16 +133,16 @@ function ArtistCard({ artist }: { artist: ArtistWithTags }) {
               de la institucion baja a la linea meta, que es donde se lee sin
               robar jerarquia.
             */}
-            {badges.length > 0 && (
+            {association && (
               <svg
                 viewBox="0 0 100 100"
                 className="size-[18px] shrink-0"
-                aria-label="Artista verificado"
+                aria-label={`Avalado por ${association.name}`}
                 role="img"
               >
                 <polygon
                   points="50,0 60.87,9.43 75,6.7 79.7,20.3 93.3,25 90.57,39.13 100,50 90.57,60.87 93.3,75 79.7,79.7 75,93.3 60.87,90.57 50,100 39.13,90.57 25,93.3 20.3,79.7 6.7,75 9.43,60.87 0,50 9.43,39.13 6.7,25 20.3,20.3 25,6.7 39.13,9.43"
-                  fill={badges[0].color ?? "#2f7bf6"}
+                  fill={association.color ?? "#2f7bf6"}
                 />
                 <path
                   d="M30 52 L44 66 L72 36"
@@ -172,9 +174,9 @@ function ArtistCard({ artist }: { artist: ArtistWithTags }) {
             de un vistazo. Se usa color-mix y no un hex con alfa porque el color
             lo teclea el admin y puede venir en cualquier formato CSS valido.
           */}
-          {badges.length > 0 && (
+          {association && (
             <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-              {badges.map((b) => {
+              {[association].map((b) => {
                 const c = b.color ?? "#2f7bf6";
                 return (
                   <span

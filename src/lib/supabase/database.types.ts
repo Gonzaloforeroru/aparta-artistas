@@ -78,6 +78,7 @@ export type Database = {
           active: boolean
           approved_at: string | null
           approved_by: string | null
+          association_id: string | null
           city: string
           created_at: string
           created_by: string | null
@@ -105,6 +106,7 @@ export type Database = {
           active?: boolean
           approved_at?: string | null
           approved_by?: string | null
+          association_id?: string | null
           city: string
           created_at?: string
           created_by?: string | null
@@ -132,6 +134,7 @@ export type Database = {
           active?: boolean
           approved_at?: string | null
           approved_by?: string | null
+          association_id?: string | null
           city?: string
           created_at?: string
           created_by?: string | null
@@ -157,6 +160,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "artists_association_id_fkey"
+            columns: ["association_id"]
+            isOneToOne: false
+            referencedRelation: "associations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "artists_invitation_token_fkey"
             columns: ["invitation_token"]
             isOneToOne: false
@@ -171,6 +181,39 @@ export type Database = {
             referencedColumns: ["code"]
           },
         ]
+      }
+      associations: {
+        Row: {
+          active: boolean
+          color: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string
+        }
+        Insert: {
+          active?: boolean
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug: string
+        }
+        Update: {
+          active?: boolean
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+        }
+        Relationships: []
       }
       departments: {
         Row: {
@@ -189,30 +232,53 @@ export type Database = {
       }
       invitations: {
         Row: {
+          association_id: string | null
           created_at: string
           created_by: string
           email: string | null
           expires_at: string
+          kind: string
+          label: string | null
+          max_uses: number | null
           token: string
           used_at: string | null
+          uses_count: number
         }
         Insert: {
+          association_id?: string | null
           created_at?: string
           created_by: string
           email?: string | null
           expires_at?: string
+          kind?: string
+          label?: string | null
+          max_uses?: number | null
           token: string
           used_at?: string | null
+          uses_count?: number
         }
         Update: {
+          association_id?: string | null
           created_at?: string
           created_by?: string
           email?: string | null
           expires_at?: string
+          kind?: string
+          label?: string | null
+          max_uses?: number | null
           token?: string
           used_at?: string | null
+          uses_count?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "invitations_association_id_fkey"
+            columns: ["association_id"]
+            isOneToOne: false
+            referencedRelation: "associations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       municipalities: {
         Row: {
@@ -324,6 +390,14 @@ export type Database = {
           slug: string
         }[]
       }
+      redeem_invitation: {
+        Args: { p_token: string }
+        Returns: {
+          association_id: string
+          ok: boolean
+          reason: string
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       slugify: { Args: { p_text: string }; Returns: string }
@@ -337,6 +411,18 @@ export type Database = {
         }[]
       }
       unaccent: { Args: { "": string }; Returns: string }
+      validate_invitation: {
+        Args: { p_token: string }
+        Returns: {
+          association_id: string
+          association_name: string
+          email: string
+          kind: string
+          label: string
+          reason: string
+          valid: boolean
+        }[]
+      }
     }
     Enums: {
       artist_status: "Pendiente" | "Aprobado" | "Rechazado"

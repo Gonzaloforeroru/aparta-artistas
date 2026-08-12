@@ -44,12 +44,21 @@ type TagRef = {
  */
 type ArtistRowWithRelations = Tables<"artists"> & {
   municipality: MunicipalityRef | null;
+  association: AssociationRef | null;
   artist_tags: { status: string; tags: TagRef | null }[] | null;
+};
+
+/** La asociacion que avala al artista. Null si no tiene ninguna. */
+export type AssociationRef = {
+  id: string;
+  name: string;
+  color: string | null;
 };
 
 export type ArtistWithTags = Tables<"artists"> & {
   municipality: MunicipalityRef | null;
   tags: TagRef[];
+  association: AssociationRef | null;
 };
 
 export async function getApprovedArtistsWithTags(): Promise<ArtistWithTags[]> {
@@ -57,7 +66,7 @@ export async function getApprovedArtistsWithTags(): Promise<ArtistWithTags[]> {
   const { data, error } = await supabase
     .from("artists")
     .select(
-      "*, municipality:municipalities(code, name, department_code), artist_tags(status, tags(id, kind, name, slug, color))",
+      "*, municipality:municipalities(code, name, department_code), association:associations(id, name, color), artist_tags(status, tags(id, kind, name, slug, color))",
     )
     .eq("status", "Aprobado")
     .eq("active", true)
@@ -74,7 +83,9 @@ export async function getApprovedArtistsWithTags(): Promise<ArtistWithTags[]> {
    * el payload RSC que Next manda al navegador, asi que "no pintarlo" no lo
    * esconde -- se leeria abriendo el inspector.
    */
-  const PUBLIC_KINDS: TagKind[] = ["artist_type", "genre", "profession", "badge"];
+  // Sin 'badge': las insignias dejaron de ser tags. Ahora son asociaciones y
+  // llegan por su propia relacion (artists.association_id), no por artist_tags.
+  const PUBLIC_KINDS: TagKind[] = ["artist_type", "genre", "profession"];
 
   return rows.map(({ artist_tags, ...artist }) => ({
     ...artist,

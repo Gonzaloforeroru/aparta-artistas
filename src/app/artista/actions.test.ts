@@ -12,6 +12,7 @@ function makeArtist(overrides: Partial<Artist> = {}): Artist {
     name: "Carlos Vives",
     city: "Bogotá",
     municipality_code: "11001",
+    association_id: null,
     type: "Cantante",
     genre: "Vallenato",
     phone: "+573001234567",
