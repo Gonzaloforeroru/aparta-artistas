@@ -15,7 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cities, artistTypes, genres, DURATION_OPTIONS } from "@/lib/data";
+import { DURATION_OPTIONS } from "@/lib/data";
+import { CitySelect } from "./city-select";
+import { TagPicker } from "./tag-picker";
+import type { Department, Municipality } from "@/lib/queries/places";
+import type { Tag, TagKind } from "@/lib/queries/tags";
 import { updateMyArtistProfile } from "@/app/artista/actions";
 import type { Artist } from "@/app/artista/actions";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -31,9 +35,20 @@ import { Globe02Icon } from "@hugeicons/core-free-icons";
 interface EditarFormProps {
   artist: Artist;
   mode: "editar" | "completar";
+  departments: Department[];
+  municipalities: Municipality[];
+  tagOptions: Record<TagKind, Tag[]>;
+  artistTags: Tag[];
 }
 
-export function EditarForm({ artist, mode }: EditarFormProps) {
+export function EditarForm({
+  artist,
+  mode,
+  departments,
+  municipalities,
+  tagOptions,
+  artistTags,
+}: EditarFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [photoPreview, setPhotoPreview] = useState<string | null>(
@@ -41,9 +56,7 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
   );
 
   // Controlled state for Select components (base-ui Select doesn't send FormData via name prop)
-  const [city, setCity] = useState<string>(artist.city ?? "");
-  const [type, setType] = useState<string>(artist.type ?? "");
-  const [genre, setGenre] = useState<string>(artist.genre ?? "");
+  // La ciudad la maneja <CitySelect />, que emite sus propios hidden inputs.
   const [duration, setDuration] = useState<string>(artist.duration ?? "");
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -67,10 +80,8 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
   return (
     <form action={handleSubmit} className="w-full max-w-2xl">
       {/* Hidden inputs for Select values (base-ui Select doesn't submit FormData) */}
-      <input type="hidden" name="city" value={city} />
-      <input type="hidden" name="type" value={type} />
-      <input type="hidden" name="genre" value={genre} />
-      <input type="hidden" name="duration" value={duration} />
+
+              <input type="hidden" name="duration" value={duration} />
 
       <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
         {/* Photo upload */}
@@ -131,65 +142,40 @@ export function EditarForm({ artist, mode }: EditarFormProps) {
                     required
                   />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <Label>
-                    Ciudad <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    value={city}
-                    onValueChange={(v) => setCity(v ?? "")}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cities.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label>
-                    Profesión <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    value={type}
-                    onValueChange={(v) => setType(v ?? "")}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {artistTypes.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label>
-                    Género Musical <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    value={genre}
-                    onValueChange={(v) => setGenre(v ?? "")}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {genres.map((g) => (
-                        <SelectItem key={g} value={g}>
-                          {g}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <CitySelect
+                  departments={departments}
+                  municipalities={municipalities}
+                  initialCode={artist.municipality_code ?? null}
+                  initialCityName={artist.city ?? null}
+                />
+
+                <div className="col-span-full flex flex-col gap-4">
+                  <TagPicker
+                    kind="artist_type"
+                    label="Tipo de artista"
+                    options={tagOptions.artist_type}
+                    initialSelected={artistTags.filter(
+                      (t) => t.kind === "artist_type",
+                    )}
+                  />
+                  <TagPicker
+                    kind="genre"
+                    label="Géneros"
+                    options={tagOptions.genre}
+                    initialSelected={artistTags.filter(
+                      (t) => t.kind === "genre",
+                    )}
+                  />
+                  <TagPicker
+                    kind="profession"
+                    label="Instrumento"
+                    required={false}
+                    hint="Solo si tocas tú: un solista de saxo o un guitarrista. Si eres un grupo, déjalo vacío."
+                    options={tagOptions.profession}
+                    initialSelected={artistTags.filter(
+                      (t) => t.kind === "profession",
+                    )}
+                  />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="price">Precio por presentación <span className="text-destructive">*</span></Label>

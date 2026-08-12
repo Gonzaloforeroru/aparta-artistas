@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { importArtists } from "@/app/admin/actions";
 import { artistTypes as VALID_TYPES, genres as VALID_GENRES } from "@/lib/data";
-import type { ArtistType, Genre } from "@/lib/supabase/database.types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,9 +41,9 @@ function validateRow(row: Omit<CsvRow, "valid" | "error">): { valid: boolean; er
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email.trim())) return { valid: false, error: "Email inválido" };
   if (!row.ciudad?.trim()) return { valid: false, error: "Ciudad requerida" };
   if (!row.tipo?.trim()) return { valid: false, error: "Tipo requerido" };
-  if (!VALID_TYPES.includes(row.tipo as ArtistType)) return { valid: false, error: `Tipo inválido: ${row.tipo}` };
+  if (!(VALID_TYPES as readonly string[]).includes(row.tipo.trim())) return { valid: false, error: `Tipo inválido: ${row.tipo}` };
   if (!row.genero?.trim()) return { valid: false, error: "Género requerido" };
-  if (!VALID_GENRES.includes(row.genero as Genre)) return { valid: false, error: `Género inválido: ${row.genero}` };
+  if (!(VALID_GENRES as readonly string[]).includes(row.genero.trim())) return { valid: false, error: `Género inválido: ${row.genero}` };
   if (!row.telefono?.trim()) return { valid: false, error: "Teléfono requerido" };
   if (!row.precio?.trim() || isNaN(Number(row.precio))) return { valid: false, error: "Precio inválido" };
   if (!row.duracion?.trim()) return { valid: false, error: "Duración requerida" };
@@ -123,8 +122,8 @@ export default function AdminImportarPage() {
       try {
         const rows = validRows.map((r) => ({
           name: r.nombre, email: r.email.trim().toLowerCase(),
-          city: r.ciudad, type: r.tipo as ArtistType,
-          genre: r.genero as Genre, phone: r.telefono,
+          city: r.ciudad, type: r.tipo.trim(),
+          genre: r.genero.trim(), phone: r.telefono,
           price: parseInt(r.precio), duration: r.duracion,
           website: r.website?.trim() || undefined,
         }));

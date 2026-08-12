@@ -1,10 +1,14 @@
 import Link from "next/link";
-import { getApprovedArtists } from "@/lib/queries/artists";
+import { getApprovedArtistsWithTags } from "@/lib/queries/artists";
+import { getOfficialTagsByKind } from "@/lib/queries/tags";
 import { CatalogoContent } from "./catalogo-content";
 import { Button } from "@/components/ui/button";
 
 export default async function CatalogoPage() {
-  const artists = await getApprovedArtists();
+  const [artists, tagsByKind] = await Promise.all([
+    getApprovedArtistsWithTags(),
+    getOfficialTagsByKind(["artist_type", "genre", "profession"]),
+  ]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -39,7 +43,7 @@ export default async function CatalogoPage() {
           </div>
         </nav>
 
-        <CatalogoContent artists={artists} />
+        <CatalogoContent artists={artists} tagsByKind={tagsByKind} />
       </div>
     </div>
   );

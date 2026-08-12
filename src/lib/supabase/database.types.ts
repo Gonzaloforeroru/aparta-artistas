@@ -7,13 +7,72 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
+      artist_tags: {
+        Row: {
+          artist_id: string
+          created_at: string
+          source: string
+          status: string
+          tag_id: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          source?: string
+          status?: string
+          tag_id: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          source?: string
+          status?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_tags_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artists: {
         Row: {
           active: boolean
@@ -24,10 +83,11 @@ export type Database = {
           created_by: string | null
           duration: string
           email: string | null
-          genre: Database["public"]["Enums"]["genre"]
+          genre: string
           id: string
           instagram: string | null
           invitation_token: string | null
+          municipality_code: string | null
           name: string
           phone: string
           photo: string | null
@@ -35,7 +95,7 @@ export type Database = {
           spotify: string | null
           status: Database["public"]["Enums"]["artist_status"]
           tiktok: string | null
-          type: Database["public"]["Enums"]["artist_type"]
+          type: string
           updated_at: string
           user_id: string | null
           website: string | null
@@ -50,10 +110,11 @@ export type Database = {
           created_by?: string | null
           duration: string
           email?: string | null
-          genre: Database["public"]["Enums"]["genre"]
+          genre: string
           id?: string
           instagram?: string | null
           invitation_token?: string | null
+          municipality_code?: string | null
           name: string
           phone: string
           photo?: string | null
@@ -61,7 +122,7 @@ export type Database = {
           spotify?: string | null
           status?: Database["public"]["Enums"]["artist_status"]
           tiktok?: string | null
-          type: Database["public"]["Enums"]["artist_type"]
+          type: string
           updated_at?: string
           user_id?: string | null
           website?: string | null
@@ -76,10 +137,11 @@ export type Database = {
           created_by?: string | null
           duration?: string
           email?: string | null
-          genre?: Database["public"]["Enums"]["genre"]
+          genre?: string
           id?: string
           instagram?: string | null
           invitation_token?: string | null
+          municipality_code?: string | null
           name?: string
           phone?: string
           photo?: string | null
@@ -87,7 +149,7 @@ export type Database = {
           spotify?: string | null
           status?: Database["public"]["Enums"]["artist_status"]
           tiktok?: string | null
-          type?: Database["public"]["Enums"]["artist_type"]
+          type?: string
           updated_at?: string
           user_id?: string | null
           website?: string | null
@@ -101,7 +163,29 @@ export type Database = {
             referencedRelation: "invitations"
             referencedColumns: ["token"]
           },
+          {
+            foreignKeyName: "artists_municipality_code_fkey"
+            columns: ["municipality_code"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["code"]
+          },
         ]
+      }
+      departments: {
+        Row: {
+          code: string
+          name: string
+        }
+        Insert: {
+          code: string
+          name: string
+        }
+        Update: {
+          code?: string
+          name?: string
+        }
+        Relationships: []
       }
       invitations: {
         Row: {
@@ -130,6 +214,35 @@ export type Database = {
         }
         Relationships: []
       }
+      municipalities: {
+        Row: {
+          code: string
+          department_code: string
+          kind: string
+          name: string
+        }
+        Insert: {
+          code: string
+          department_code: string
+          kind?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          department_code?: string
+          kind?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "municipalities_department_code_fkey"
+            columns: ["department_code"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -157,12 +270,73 @@ export type Database = {
         }
         Relationships: []
       }
+      tags: {
+        Row: {
+          archived_at: string | null
+          color: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_official: boolean
+          kind: string
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          archived_at?: string | null
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_official?: boolean
+          kind: string
+          name: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          archived_at?: string | null
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_official?: boolean
+          kind?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_unconfirmed_users: { Args: never; Returns: undefined }
+      propose_tag: {
+        Args: { p_kind: string; p_name: string }
+        Returns: {
+          id: string
+          is_official: boolean
+          name: string
+          slug: string
+        }[]
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
+      slugify: { Args: { p_text: string }; Returns: string }
+      suggest_similar_tag: {
+        Args: { p_kind: string; p_name: string }
+        Returns: {
+          id: string
+          name: string
+          similarity: number
+          slug: string
+        }[]
+      }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       artist_status: "Pendiente" | "Aprobado" | "Rechazado"
@@ -308,6 +482,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       artist_status: ["Pendiente", "Aprobado", "Rechazado"],
@@ -333,6 +510,8 @@ export const Constants = {
     },
   },
 } as const
+
+
 
 export type ArtistType = Database["public"]["Enums"]["artist_type"]
 export type Genre = Database["public"]["Enums"]["genre"]

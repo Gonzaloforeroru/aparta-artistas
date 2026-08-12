@@ -27,6 +27,7 @@ import {
   ArrowUpRight01Icon,
   Upload01Icon,
   Mail01Icon,
+  Tag01Icon,
 } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 
@@ -56,6 +57,11 @@ const adminNav = [
     title: "Aprobaciones",
     url: "/admin/aprobaciones",
     icon: CheckmarkCircle01Icon,
+  },
+  {
+    title: "Etiquetas",
+    url: "/admin/tags",
+    icon: Tag01Icon,
   },
   {
     title: "Métricas",

@@ -2,6 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { getMyArtistProfile } from "@/app/artista/actions";
 import { ensureArtistProfile } from "@/lib/auth/ensure-artist";
 import { isProfileComplete } from "@/app/artista/utils";
+import { getPlacesForCascade } from "@/lib/queries/places";
+import { getOfficialTagsByKind, getArtistTags } from "@/lib/queries/tags";
 import { EditarForm } from "./editar-form";
 
 export default async function EditarPerfilPage() {
@@ -13,9 +15,16 @@ export default async function EditarPerfilPage() {
 
   if (!artist) notFound();
 
-  // Completeness guard. Same reasoning as /artista: the layout cannot tell
-  // which route is rendering, so each page carries its own.
+  // Completeness guard. It lives here, not in the layout: a layout cannot tell
+  // which route is rendering, and the header-based workaround it used broke on
+  // Vercel and made /artista/completar redirect to itself.
   if (!isProfileComplete(artist)) redirect("/artista/completar");
+
+  const [places, tagOptions, artistTags] = await Promise.all([
+    getPlacesForCascade(),
+    getOfficialTagsByKind(),
+    getArtistTags(artist.id),
+  ]);
 
   return (
     <div className="flex flex-1 flex-col items-center gap-6 p-6">
@@ -25,7 +34,14 @@ export default async function EditarPerfilPage() {
           Modifica tu información de artista
         </p>
       </div>
-      <EditarForm artist={artist} mode="editar" />
+      <EditarForm
+        artist={artist}
+        mode="editar"
+        departments={places.departments}
+        municipalities={places.municipalities}
+        tagOptions={tagOptions}
+        artistTags={artistTags}
+      />
     </div>
   );
 }
