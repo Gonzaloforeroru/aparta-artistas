@@ -219,17 +219,31 @@ export async function rejectArtist(id: string) {
 // INVITATIONS
 // ═══════════════════════════════════════════
 
-export async function createInvitation(nota?: string) {
+export async function createInvitation(input: {
+  kind: "personal" | "campaign";
+  label?: string;
+  associationId?: string | null;
+  days: number;
+  maxUses?: number | null;
+}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) throw new Error("Not authenticated");
 
   const token = nanoid(21);
+  const expiresAt = new Date(
+    Date.now() + input.days * 24 * 60 * 60 * 1000,
+  ).toISOString();
 
   const { error } = await supabase.from("invitations").insert({
     token,
-    email: nota || null,
+    kind: input.kind,
+    label: input.label || null,
+    email: input.label || null,
+    association_id: input.associationId || null,
+    max_uses: input.kind === "campaign" ? (input.maxUses ?? null) : 1,
+    expires_at: expiresAt,
     created_by: user.id,
   });
 
@@ -247,7 +261,7 @@ export async function getInvitations() {
 
   const { data, error } = await supabase
     .from("invitations")
-    .select("*")
+    .select("*, associations(id, name)")
     .order("created_at", { ascending: false });
 
   if (error) throw error;
@@ -309,23 +323,32 @@ export async function registerArtistWithToken(token: string, formData: FormData)
   // Use admin client to bypass RLS (anon users can't insert directly due to policy issues)
   const supabase = createAdminClient();
 
-  // Validate token
-  const { data: invitation } = await supabase
-    .from("invitations")
-    .select("*")
-    .eq("token", token)
-    .is("used_at", null)
-    .gt("expires_at", new Date().toISOString())
-    .single();
+  // Redeem token atomically via RPC — this is the ONLY correct way to consume
+  // a use. It validates, increments uses_count, and returns association_id in a
+  // single transaction so there is no race condition on multi-use tokens.
+  const { data: redeemResult, error: redeemError } = await supabase.rpc(
+    "redeem_invitation",
+    { p_token: token },
+  );
 
-  if (!invitation) {
-    throw new Error("Token inválido o expirado");
+  if (redeemError) throw new Error("Error al canjear la invitación");
+
+  const row = Array.isArray(redeemResult) ? redeemResult[0] : redeemResult;
+
+  if (!row?.ok) {
+    const messages: Record<string, string> = {
+      not_found: "El enlace de invitación no existe.",
+      expired: "El enlace de invitación ha caducado.",
+      already_used: "Este enlace de invitación ya fue utilizado.",
+      exhausted: "Este enlace de invitación ha agotado su cupo.",
+    };
+    throw new Error(messages[row?.reason] ?? "Token inválido o expirado");
   }
 
   // Handle photo upload
   const photoFile = formData.get("photo") as File | null;
 
-  // Insert artist first (to get ID for photo path)
+  // Insert artist with association_id from the redeemed invitation
   const { data: artistData, error: artistError } = await supabase
     .from("artists")
     .insert({
@@ -338,6 +361,7 @@ export async function registerArtistWithToken(token: string, formData: FormData)
       duration: formData.get("duration") as string,
       status: "Pendiente" as ArtistStatus,
       invitation_token: token,
+      association_id: row.association_id || null,
       instagram: (formData.get("instagram") as string) || null,
       tiktok: (formData.get("tiktok") as string) || null,
       youtube: (formData.get("youtube") as string) || null,
@@ -353,21 +377,12 @@ export async function registerArtistWithToken(token: string, formData: FormData)
   if (photoFile && photoFile.size > 0) {
     const uploadedUrl = await uploadArtistPhoto(photoFile, artistData.id);
     if (uploadedUrl) {
-      // Update artist with photo URL
       await supabase
         .from("artists")
         .update({ photo: uploadedUrl })
         .eq("id", artistData.id);
     }
   }
-
-  // Mark token as used
-  const { error: tokenError } = await supabase
-    .from("invitations")
-    .update({ used_at: new Date().toISOString() })
-    .eq("token", token);
-
-  if (tokenError) throw tokenError;
 
   revalidatePath("/admin/aprobaciones");
   revalidatePath("/admin/invitaciones");
@@ -444,53 +459,6 @@ export async function rejectTag(tagId: string): Promise<TagActionResult> {
     .from("tags")
     .update({ archived_at: new Date().toISOString() })
     .eq("id", tagId);
-
-  if (error) return { success: false, error: error.message };
-  revalidateTagPaths();
-  return { success: true };
-}
-
-/**
- * Verifica una insignia reclamada por un artista.
- *
- * Hacen falta las dos claves porque artist_tags no tiene id propio: su PK es
- * (artist_id, tag_id).
- */
-export async function approveBadgeClaim(
-  artistId: string,
-  tagId: string,
-): Promise<TagActionResult> {
-  const { supabase, denied } = await requireTagAdmin();
-  if (denied) return { success: false, error: denied };
-
-  const { error } = await supabase
-    .from("artist_tags")
-    .update({ status: "approved" })
-    .eq("artist_id", artistId)
-    .eq("tag_id", tagId);
-
-  if (error) return { success: false, error: error.message };
-  revalidateTagPaths();
-  return { success: true };
-}
-
-/**
- * Marca la reclamacion como 'rejected' en vez de borrar la fila: asi el artista
- * no puede volver a reclamar la misma insignia en bucle y queda rastro de la
- * decision. El CHECK artist_tags_status_check ya contempla este valor.
- */
-export async function rejectBadgeClaim(
-  artistId: string,
-  tagId: string,
-): Promise<TagActionResult> {
-  const { supabase, denied } = await requireTagAdmin();
-  if (denied) return { success: false, error: denied };
-
-  const { error } = await supabase
-    .from("artist_tags")
-    .update({ status: "rejected" })
-    .eq("artist_id", artistId)
-    .eq("tag_id", tagId);
 
   if (error) return { success: false, error: error.message };
   revalidateTagPaths();
@@ -643,6 +611,127 @@ export async function unarchiveTag(tagId: string): Promise<TagActionResult> {
 
   if (error) return { success: false, error: error.message };
   revalidateTagPaths();
+  return { success: true };
+}
+
+// ═══════════════════════════════════════════
+// ASSOCIATION MANAGEMENT
+// ═══════════════════════════════════════════
+
+export type AssociationActionResult =
+  | { success: true }
+  | { success: false; error: string };
+
+/** Reutiliza el mismo guard de admin que los tags. */
+async function requireAssociationAdmin() {
+  return requireTagAdmin();
+}
+
+function revalidateAssociationPaths() {
+  revalidatePath("/admin/asociaciones");
+  revalidatePath("/catalogo");
+}
+
+export async function createAssociation(input: {
+  name: string;
+  color?: string | null;
+  logoUrl?: string | null;
+}): Promise<AssociationActionResult> {
+  const { supabase, userId, denied } = await requireAssociationAdmin();
+  if (denied) return { success: false, error: denied };
+
+  const trimmed = input.name.trim();
+  if (trimmed.length < 2 || trimmed.length > 100)
+    return { success: false, error: "El nombre debe tener entre 2 y 100 caracteres." };
+
+  const { data: slugData, error: slugError } = await supabase.rpc("slugify", {
+    p_text: trimmed,
+  });
+  if (slugError || !slugData)
+    return {
+      success: false,
+      error: slugError?.message ?? `"${trimmed}" no produce un identificador válido.`,
+    };
+
+  const { error } = await supabase.from("associations").insert({
+    name: trimmed,
+    slug: slugData as string,
+    color: input.color ?? null,
+    logo_url: input.logoUrl ?? null,
+    created_by: userId,
+  });
+
+  if (error) {
+    if (error.code === "23505")
+      return { success: false, error: `Ya existe una asociación "${trimmed}".` };
+    return { success: false, error: error.message };
+  }
+
+  revalidateAssociationPaths();
+  return { success: true };
+}
+
+/**
+ * Renombra una asociación SIN tocar su slug (mismo razonamiento que renameTag).
+ */
+export async function renameAssociation(
+  id: string,
+  name: string,
+): Promise<AssociationActionResult> {
+  const { supabase, denied } = await requireAssociationAdmin();
+  if (denied) return { success: false, error: denied };
+
+  const trimmed = name.trim();
+  if (trimmed.length < 2 || trimmed.length > 100)
+    return { success: false, error: "El nombre debe tener entre 2 y 100 caracteres." };
+
+  const { error } = await supabase
+    .from("associations")
+    .update({ name: trimmed })
+    .eq("id", id);
+
+  if (error) return { success: false, error: error.message };
+  revalidateAssociationPaths();
+  return { success: true };
+}
+
+export async function updateAssociationPresentation(
+  id: string,
+  input: { color?: string | null; logoUrl?: string | null },
+): Promise<AssociationActionResult> {
+  const { supabase, denied } = await requireAssociationAdmin();
+  if (denied) return { success: false, error: denied };
+
+  const update: Record<string, string | null> = {};
+  if (input.color !== undefined) update.color = input.color ?? null;
+  if (input.logoUrl !== undefined) update.logo_url = input.logoUrl ?? null;
+
+  if (Object.keys(update).length === 0) return { success: true };
+
+  const { error } = await supabase
+    .from("associations")
+    .update(update)
+    .eq("id", id);
+
+  if (error) return { success: false, error: error.message };
+  revalidateAssociationPaths();
+  return { success: true };
+}
+
+export async function toggleAssociationActive(
+  id: string,
+  active: boolean,
+): Promise<AssociationActionResult> {
+  const { supabase, denied } = await requireAssociationAdmin();
+  if (denied) return { success: false, error: denied };
+
+  const { error } = await supabase
+    .from("associations")
+    .update({ active })
+    .eq("id", id);
+
+  if (error) return { success: false, error: error.message };
+  revalidateAssociationPaths();
   return { success: true };
 }
 

@@ -4,8 +4,7 @@ export type TagKind =
   | "artist_type"
   | "genre"
   | "profession"
-  | "gender"
-  | "badge";
+  | "gender";
 
 export type Tag = {
   id: string;
@@ -25,17 +24,6 @@ export type PendingTag = Tag & {
   proposedBy: string | null;
   /** Cuantos artistas lo usan ya. Es el dato que decide si vale la pena. */
   usageCount: number;
-};
-
-/** Insignia que un artista dice tener y que nadie ha verificado todavia. */
-export type PendingBadgeClaim = {
-  artistId: string;
-  artistName: string;
-  artistPhoto: string | null;
-  tagId: string;
-  tagName: string;
-  tagColor: string | null;
-  claimedAt: string;
 };
 
 /** Fila del catalogo en el panel de admin: incluye lo que el publico no ve. */
@@ -58,14 +46,6 @@ type PendingTagRow = {
   created_at: string;
   created_by: string | null;
   artist_tags: { count: number }[];
-};
-
-type BadgeClaimRow = {
-  artist_id: string;
-  tag_id: string;
-  created_at: string;
-  tags: { id: string; name: string; color: string | null } | null;
-  artists: { id: string; name: string; photo: string | null } | null;
 };
 
 type CatalogTagRow = {
@@ -122,7 +102,6 @@ export async function getOfficialTagsByKind(
     genre: [],
     profession: [],
     gender: [],
-    badge: [],
   } as Record<TagKind, Tag[]>;
 
   for (const tag of tags) grouped[tag.kind].push(tag);
@@ -236,47 +215,6 @@ export async function getPendingTags(): Promise<PendingTag[]> {
     proposedBy: row.created_by ? (proposers.get(row.created_by) ?? null) : null,
     usageCount: row.artist_tags?.[0]?.count ?? 0,
   }));
-}
-
-/**
- * Insignias reclamadas y aun sin verificar.
- *
- * `!inner` es obligatorio: sin el, PostgREST hace un left join y `.eq` sobre la
- * tabla embebida no filtra la fila padre, solo vacia la hija. El resultado
- * serian todas las reclamaciones pendientes de cualquier tipo de tag.
- */
-export async function getPendingBadgeClaims(): Promise<PendingBadgeClaim[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("artist_tags")
-    .select(
-      "artist_id, tag_id, created_at, tags!inner(id, name, color), artists!inner(id, name, photo)",
-    )
-    .eq("status", "pending")
-    .eq("tags.kind", "badge")
-    .order("created_at", { ascending: true });
-
-  if (error) throw error;
-  if (!data?.length) return [];
-
-  const rows = data as unknown as BadgeClaimRow[];
-
-  return rows.flatMap((row) =>
-    row.tags && row.artists
-      ? [
-          {
-            artistId: row.artist_id,
-            artistName: row.artists.name,
-            artistPhoto: row.artists.photo,
-            tagId: row.tag_id,
-            tagName: row.tags.name,
-            tagColor: row.tags.color,
-            claimedAt: row.created_at,
-          },
-        ]
-      : [],
-  );
 }
 
 /**

@@ -20,15 +20,13 @@ import { Separator } from "@/components/ui/separator";
 import {
   approveTag,
   rejectTag,
-  approveBadgeClaim,
-  rejectBadgeClaim,
   createTag,
   renameTag,
   updateTagPresentation,
   archiveTag,
   unarchiveTag,
 } from "@/app/admin/actions";
-import type { PendingTag, PendingBadgeClaim, CatalogTag, TagKind } from "@/lib/queries/tags";
+import type { PendingTag, CatalogTag, TagKind } from "@/lib/queries/tags";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   CheckmarkCircle01Icon,
@@ -43,7 +41,6 @@ import {
   Delete02Icon,
   ArchiveRestoreIcon,
 } from "@hugeicons/core-free-icons";
-import Image from "next/image";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -52,7 +49,6 @@ const KIND_LABELS: Record<TagKind, string> = {
   genre: "Género musical",
   profession: "Profesión",
   gender: "Género",
-  badge: "Insignia",
 };
 
 function KindBadge({ kind }: { kind: TagKind }) {
@@ -72,14 +68,6 @@ function ColorDot({ color }: { color: string | null }) {
       title={color}
     />
   );
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("es-CO", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
 }
 
 // ─── Bloque 1 — Cola de aprobación de tags ──────────────────────────────────
@@ -181,132 +169,9 @@ function PendingTagsQueue({ tags }: { tags: PendingTag[] }) {
   );
 }
 
-// ─── Bloque 2 — Cola de insignias reclamadas ────────────────────────────────
+// ─── Bloque 2 — Catálogo de tags ────────────────────────────────────────────
 
-function PendingBadgesQueue({ claims }: { claims: PendingBadgeClaim[] }) {
-  const [isPending, startTransition] = useTransition();
-
-  function handleApprove(artistId: string, tagId: string) {
-    startTransition(async () => {
-      const result = await approveBadgeClaim(artistId, tagId);
-      if (result.success) {
-        toast.success("Insignia verificada");
-      } else {
-        toast.error(result.error);
-      }
-    });
-  }
-
-  function handleReject(artistId: string, tagId: string) {
-    startTransition(async () => {
-      const result = await rejectBadgeClaim(artistId, tagId);
-      if (result.success) {
-        toast.success("Reclamación rechazada");
-      } else {
-        toast.error(result.error);
-      }
-    });
-  }
-
-  return (
-    <section>
-      <div className="mb-3">
-        <h2 className="text-lg font-semibold tracking-tight">Insignias reclamadas</h2>
-        <p className="text-sm text-muted-foreground">
-          Insignias que artistas dicen tener, pendientes de verificación
-        </p>
-      </div>
-      {claims.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
-          <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-8 w-8 text-[var(--success)]" />
-          <p className="mt-3 text-sm font-medium text-muted-foreground">Sin insignias pendientes</p>
-          <p className="text-xs text-muted-foreground/70">Todas las reclamaciones han sido revisadas</p>
-        </div>
-      ) : (
-        <div className="rounded-xl bg-card overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[44px]">Foto</TableHead>
-                <TableHead>Artista</TableHead>
-                <TableHead>Insignia</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {claims.map((claim) => (
-                <TableRow key={`${claim.artistId}-${claim.tagId}`}>
-                  <TableCell>
-                    <div className="relative h-8 w-8 overflow-hidden rounded-full">
-                      {claim.artistPhoto ? (
-                        <Image
-                          src={claim.artistPhoto}
-                          alt={claim.artistName}
-                          fill
-                          className="object-cover"
-                          sizes="32px"
-                        />
-                      ) : (
-                        <div className="flex size-full items-center justify-center bg-muted text-xs font-bold text-muted-foreground">
-                          {claim.artistName.charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">{claim.artistName}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="secondary"
-                      className="text-xs"
-                      style={
-                        claim.tagColor
-                          ? { backgroundColor: `${claim.tagColor}20`, color: claim.tagColor }
-                          : undefined
-                      }
-                    >
-                      {claim.tagName}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground tabular-nums">
-                    {formatDate(claim.claimedAt)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        size="sm"
-                        className="gap-1.5 bg-[var(--success)] hover:bg-[var(--success-bg)] hover:text-[var(--success)] text-white"
-                        onClick={() => handleApprove(claim.artistId, claim.tagId)}
-                        disabled={isPending}
-                      >
-                        <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-3.5 w-3.5" />
-                        Verificar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1.5 text-destructive border-destructive/30 hover:bg-[var(--error-bg)]"
-                        onClick={() => handleReject(claim.artistId, claim.tagId)}
-                        disabled={isPending}
-                      >
-                        <HugeiconsIcon icon={CancelCircleIcon} className="h-3.5 w-3.5" />
-                        Rechazar
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-    </section>
-  );
-}
-
-// ─── Bloque 3 — Catálogo de tags ────────────────────────────────────────────
-
-const ALL_KINDS: TagKind[] = ["artist_type", "genre", "profession", "gender", "badge"];
+const ALL_KINDS: TagKind[] = ["artist_type", "genre", "profession", "gender"];
 const PER_PAGE = 20;
 
 function CatalogSection({ tags }: { tags: CatalogTag[] }) {
@@ -783,23 +648,20 @@ function CatalogSection({ tags }: { tags: CatalogTag[] }) {
 
 interface TagsContentProps {
   pendingTags: PendingTag[];
-  pendingBadgeClaims: PendingBadgeClaim[];
   catalogTags: CatalogTag[];
 }
 
-export function TagsContent({ pendingTags, pendingBadgeClaims, catalogTags }: TagsContentProps) {
+export function TagsContent({ pendingTags, catalogTags }: TagsContentProps) {
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Etiquetas</h1>
         <p className="text-sm text-muted-foreground">
-          Gestión de tags, géneros e insignias
+          Gestión de tags y géneros
         </p>
       </div>
 
       <PendingTagsQueue tags={pendingTags} />
-
-      <PendingBadgesQueue claims={pendingBadgeClaims} />
 
       <Separator />
 

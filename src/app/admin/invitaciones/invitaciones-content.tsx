@@ -10,6 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 import {
@@ -17,35 +20,77 @@ import {
   Clock01Icon, CancelCircleIcon, Add01Icon,
 } from "@hugeicons/core-free-icons";
 import { createInvitation } from "@/app/admin/actions";
-import type { Tables } from "@/lib/supabase/database.types";
+import type { Association } from "@/lib/queries/associations";
 
-type Invitation = Tables<"invitations">;
+type InvitationRow = {
+  token: string;
+  kind: string;
+  label: string | null;
+  email: string | null;
+  association_id: string | null;
+  max_uses: number | null;
+  uses_count: number;
+  created_at: string;
+  expires_at: string;
+  used_at: string | null;
+  created_by: string;
+  associations: { id: string; name: string } | null;
+};
 
-function getStatus(inv: Invitation): "pendiente" | "usado" | "expirado" {
-  if (inv.used_at) return "usado";
+function getStatus(inv: InvitationRow): "pendiente" | "agotado" | "expirado" {
+  if (inv.max_uses !== null && inv.uses_count >= inv.max_uses) return "agotado";
   if (new Date(inv.expires_at) < new Date()) return "expirado";
   return "pendiente";
 }
 
-function StatusBadge({ status }: { status: "pendiente" | "usado" | "expirado" }) {
+function StatusBadge({ status }: { status: "pendiente" | "agotado" | "expirado" }) {
   const config = {
-    pendiente: { label: "Pendiente", icon: Clock01Icon, className: "bg-[var(--warning-bg)] text-[var(--warning)]" },
-    usado: { label: "Usado", icon: CheckmarkCircle01Icon, className: "bg-[var(--success-bg)] text-[var(--success)]" },
-    expirado: { label: "Expirado", icon: CancelCircleIcon, className: "bg-muted text-muted-foreground" },
+    pendiente: { label: "Activa", icon: Clock01Icon, className: "bg-[var(--warning-bg)] text-[var(--warning)]" },
+    agotado: { label: "Agotada", icon: CheckmarkCircle01Icon, className: "bg-[var(--success-bg)] text-[var(--success)]" },
+    expirado: { label: "Expirada", icon: CancelCircleIcon, className: "bg-muted text-muted-foreground" },
   };
   const c = config[status];
-  return (<Badge variant="secondary" className={c.className}><HugeiconsIcon icon={c.icon as IconSvgElement} className="mr-1 size-3" /> {c.label}</Badge>);
+  return (
+    <Badge variant="secondary" className={c.className}>
+      <HugeiconsIcon icon={c.icon as IconSvgElement} className="mr-1 size-3" /> {c.label}
+    </Badge>
+  );
 }
 
-export function InvitacionesContent({ invitations }: { invitations: Invitation[] }) {
-  const [nota, setNota] = useState("");
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("es-CO", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+interface InvitacionesContentProps {
+  invitations: InvitationRow[];
+  associations: Association[];
+}
+
+export function InvitacionesContent({ invitations, associations }: InvitacionesContentProps) {
+  const [kind, setKind] = useState<"personal" | "campaign">("personal");
+  const [label, setLabel] = useState("");
+  const [associationId, setAssociationId] = useState<string>("none");
+  const [days, setDays] = useState(1);
+  const [maxUses, setMaxUses] = useState<number | "">(10);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const activeAssociations = associations.filter((a) => a.active);
 
   function handleGenerate() {
     startTransition(async () => {
       try {
-        const result = await createInvitation(nota || undefined);
+        const result = await createInvitation({
+          kind,
+          label: label || undefined,
+          associationId: associationId !== "none" ? associationId : null,
+          days,
+          maxUses: kind === "campaign" ? (maxUses || null) : undefined,
+        });
         setGeneratedLink(result.link);
         toast.success("Link de invitación generado");
       } catch {
@@ -61,43 +106,116 @@ export function InvitacionesContent({ invitations }: { invitations: Invitation[]
     }
   }
 
-  function handleReset() { setNota(""); setGeneratedLink(null); }
+  function handleReset() {
+    setLabel("");
+    setAssociationId("none");
+    setDays(1);
+    setMaxUses(10);
+    setGeneratedLink(null);
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Invitaciones</h1>
-        <p className="text-sm text-muted-foreground">Genera links de registro de un solo uso para artistas</p>
+        <p className="text-sm text-muted-foreground">Genera enlaces de registro para artistas</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><HugeiconsIcon icon={Link01Icon} className="size-5 text-primary" />Generar Link de Registro</CardTitle>
-          <CardDescription>El link expira en 24 horas y solo se puede usar una vez</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <HugeiconsIcon icon={Link01Icon} className="size-5 text-primary" />
+            Generar Link de Registro
+          </CardTitle>
+          <CardDescription>Configura el tipo, duración y asociación del enlace</CardDescription>
         </CardHeader>
         <CardContent>
           {!generatedLink ? (
             <div className="flex flex-col gap-4">
-              <div>
-                <Label htmlFor="invite-nota" className="text-muted-foreground">Nota (opcional — para tu referencia)</Label>
-                <Input id="invite-nota" placeholder="Ej: Juan Pérez, cantante de vallenato" className="mt-1.5 h-11"
-                  value={nota} onChange={(e) => setNota(e.target.value)} />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs text-muted-foreground">Tipo</Label>
+                  <Select value={kind} onValueChange={(v) => setKind(v as "personal" | "campaign")}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="personal">Personal (un solo uso)</SelectItem>
+                      <SelectItem value="campaign">Campaña (múltiples usos)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs text-muted-foreground">Etiqueta (opcional)</Label>
+                  <Input
+                    placeholder="Ej: Convocatoria Enero 2027"
+                    value={label}
+                    onChange={(e) => setLabel(e.target.value)}
+                  />
+                </div>
               </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs text-muted-foreground">Asociación (opcional)</Label>
+                  <Select value={associationId} onValueChange={(v) => setAssociationId(v ?? "none")}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sin asociación" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sin asociación</SelectItem>
+                      {activeAssociations.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs text-muted-foreground">Días de validez</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={days}
+                    onChange={(e) => setDays(parseInt(e.target.value) || 1)}
+                    className="tabular-nums"
+                  />
+                </div>
+                {kind === "campaign" && (
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs text-muted-foreground">Cupo máximo (vacío = ilimitado)</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={maxUses}
+                      onChange={(e) => setMaxUses(e.target.value ? parseInt(e.target.value) : "")}
+                      placeholder="∞"
+                      className="tabular-nums"
+                    />
+                  </div>
+                )}
+              </div>
+
               <Button onClick={handleGenerate} disabled={isPending} className="h-11 gap-2 w-fit">
-                <HugeiconsIcon icon={Add01Icon} className="size-4" />Generar Link
+                <HugeiconsIcon icon={Add01Icon} className="size-4" />
+                Generar Link
               </Button>
             </div>
           ) : (
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <Label className="text-muted-foreground">Link generado{nota ? ` — ${nota}` : ""}</Label>
+                <Label className="text-muted-foreground">Link generado{label ? ` — ${label}` : ""}</Label>
                 <div className="flex items-center gap-2">
                   <Input value={generatedLink} readOnly className="h-11 font-mono text-sm" />
-                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" onClick={handleCopy}><HugeiconsIcon icon={Copy01Icon} className="size-4" /></Button>
+                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" onClick={handleCopy}>
+                    <HugeiconsIcon icon={Copy01Icon} className="size-4" />
+                  </Button>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-[var(--warning-bg)] text-[var(--warning)]"><HugeiconsIcon icon={Clock01Icon} className="mr-1 size-3" /> Expira en 24 horas</Badge>
+                <Badge variant="secondary" className="bg-[var(--warning-bg)] text-[var(--warning)]">
+                  <HugeiconsIcon icon={Clock01Icon} className="mr-1 size-3" /> Expira en {days} día{days !== 1 ? "s" : ""}
+                </Badge>
                 <Button variant="ghost" size="sm" onClick={handleReset}>Generar otra</Button>
               </div>
             </div>
@@ -105,33 +223,55 @@ export function InvitacionesContent({ invitations }: { invitations: Invitation[]
         </CardContent>
       </Card>
 
-       <Card>
-         <CardHeader>
-           <CardTitle>Historial de Invitaciones</CardTitle>
+      <Card>
+        <CardHeader>
+          <CardTitle>Historial de Invitaciones</CardTitle>
           <CardDescription>{invitations.length} invitaciones en total</CardDescription>
         </CardHeader>
         <CardContent>
-           <div className="rounded-lg">
+          <div className="rounded-lg">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nota</TableHead>
+                  <TableHead>Etiqueta</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Asociación</TableHead>
                   <TableHead>Estado</TableHead>
-                  <TableHead>Creada</TableHead>
-                  <TableHead>Usada</TableHead>
+                  <TableHead className="text-center">Usos</TableHead>
+                  <TableHead>Caduca</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {invitations.map((inv) => (
                   <TableRow key={inv.token}>
-                    <TableCell className="font-medium">{inv.email || <span className="text-muted-foreground italic">Sin nota</span>}</TableCell>
-                    <TableCell><StatusBadge status={getStatus(inv)} /></TableCell>
-                    <TableCell className="text-muted-foreground">{new Date(inv.created_at).toLocaleDateString("es-CO")}</TableCell>
-                    <TableCell className="text-muted-foreground">{inv.used_at ? new Date(inv.used_at).toLocaleDateString("es-CO") : "—"}</TableCell>
+                    <TableCell className="font-medium">
+                      {inv.label || inv.email || <span className="text-muted-foreground italic">Sin etiqueta</span>}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">
+                        {inv.kind === "campaign" ? "Campaña" : "Personal"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {inv.associations?.name ?? "—"}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={getStatus(inv)} />
+                    </TableCell>
+                    <TableCell className="text-center tabular-nums text-sm">
+                      {inv.uses_count}{inv.max_uses !== null ? ` / ${inv.max_uses}` : " / ∞"}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground tabular-nums">
+                      {formatDate(inv.expires_at)}
+                    </TableCell>
                   </TableRow>
                 ))}
                 {invitations.length === 0 && (
-                  <TableRow><TableCell colSpan={4} className="py-8 text-center text-muted-foreground">No hay invitaciones aún</TableCell></TableRow>
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                      No hay invitaciones aún
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>

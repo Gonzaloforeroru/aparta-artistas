@@ -134,38 +134,41 @@ export async function handlePostLogin(
   }
 
   // Step 4: Invitation token handling
+  //
+  // Uses `redeem_invitation` RPC for atomic consumption: it validates, increments
+  // uses_count, and returns association_id in a single transaction. This avoids
+  // race conditions on multi-use (campaign) tokens.
+  //
+  // The adminClient (service role) calls the RPC so it works even if the user's
+  // role has no direct access to the invitations table.
   if (token) {
-    const now = new Date().toISOString();
+    // AQUI NO SE CANJEA.
+    //
+    // El canje ya lo hizo registerArtistWithToken al crear la ficha, y ahi se
+    // asigno tambien la association_id. Volver a llamar a redeem_invitation
+    // gastaria un SEGUNDO uso por la misma persona: una campana con cupo 10
+    // solo habria servido a 5. Lo unico que falta aqui es enlazar la ficha
+    // (creada sin sesion) con la cuenta que acaba de entrar.
+    //
+    // Tampoco se puede usar maybeSingle() filtrando solo por el token: en una
+    // campana MUCHAS fichas comparten el mismo invitation_token, y en cuanto
+    // hubiera dos la consulta reventaba. Se acota a las que aun no tienen
+    // dueno y se toma la mas reciente.
+    const { data: candidatos } = await adminClient
+      .from("artists")
+      .select("id")
+      .eq("invitation_token", token)
+      .is("user_id", null)
+      .order("created_at", { ascending: false })
+      .limit(1);
 
-    // Validate token: not used and not expired
-    const { data: invitation } = await adminClient
-      .from("invitations")
-      .select("token")
-      .eq("token", token)
-      .is("used_at", null)
-      .gt("expires_at", now)
-      .maybeSingle();
+    const invitedArtist = candidatos?.[0];
 
-    if (invitation) {
-      // Find artist created via this invitation token
-      const { data: invitedArtist } = await adminClient
-        .from("artists")
-        .select("id")
-        .eq("invitation_token", token)
-        .maybeSingle();
-
-      if (invitedArtist) {
-        await adminClient
-          .from("artists")
-          .update({ user_id: user.id })
-          .eq("id", (invitedArtist as { id: string }).id);
-      }
-
-      // Mark invitation as used
+    if (invitedArtist) {
       await adminClient
-        .from("invitations")
-        .update({ used_at: now })
-        .eq("token", token);
+        .from("artists")
+        .update({ user_id: user.id })
+        .eq("id", invitedArtist.id);
     }
   }
 

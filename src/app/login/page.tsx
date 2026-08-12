@@ -18,7 +18,7 @@ const errorMessages: Record<string, string> = {
 };
 
 interface LoginPageProps {
-  searchParams: Promise<{ token?: string; error?: string }>;
+  searchParams: Promise<{ token?: string; error?: string; association?: string }>;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -40,6 +40,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const token = params.token;
   const error = params.error;
+  const association = params.association;
 
   return (
     <div className="relative flex min-h-svh items-center justify-center overflow-hidden bg-background px-4 py-8">
@@ -66,6 +67,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </p>
           </div>
         </div>
+
+        {/* Association badge */}
+        {association && (
+          <div className="rounded-lg bg-[var(--success-bg)] px-4 py-3 text-sm text-[var(--success)]">
+            Te registras avalado por <strong>{association}</strong>
+          </div>
+        )}
 
         {/* Error message */}
         {error && errorMessages[error] && (

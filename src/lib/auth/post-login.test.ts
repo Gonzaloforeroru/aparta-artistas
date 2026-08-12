@@ -18,6 +18,10 @@ function mockBuilder(
     ilike: vi.fn(),
     is: vi.fn(),
     gt: vi.fn(),
+    order: vi.fn(),
+    // `limit` cierra la cadena y resuelve, como hace PostgREST cuando no se
+    // pide single(): devuelve un array.
+    limit: vi.fn().mockResolvedValue(resolved),
     single: vi.fn().mockResolvedValue(resolved),
     maybeSingle: vi.fn().mockResolvedValue(resolved),
   };
@@ -31,6 +35,7 @@ function mockBuilder(
   b.ilike.mockReturnValue(b);
   b.is.mockReturnValue(b);
   b.gt.mockReturnValue(b);
+  b.order.mockReturnValue(b);
   return b;
 }
 
@@ -221,30 +226,25 @@ describe("handlePostLogin", () => {
     const artistSelectBuilder = mockBuilder({ data: null, error: null });
     // 2nd: artist insert (new record)
     const artistInsertBuilder = mockBuilder();
-    // 3rd: invitation select (valid token found)
-    const invitationSelectBuilder = mockBuilder({
-      data: { token: "abc123" },
-      error: null,
-    });
-    // 4th: artist by invitation_token (found)
+    // 3rd: ficha huerfana con ese token (encontrada). Llega como array porque
+    // la consulta cierra con .limit(1), no con maybeSingle().
     const invitedArtistBuilder = mockBuilder({
-      data: { id: "invited-artist-789" },
+      data: [{ id: "invited-artist-789" }],
       error: null,
     });
-    // 5th: artist update user_id for invited artist
+    // 4th: enlazar esa ficha con el usuario
     const artistUpdateBuilder = mockBuilder();
-    // 6th: invitation mark used
-    const invitationUpdateBuilder = mockBuilder();
 
     const adminClient = makeMockClient(
       profileUpsertBuilder,
       artistSelectBuilder,
       artistInsertBuilder,
-      invitationSelectBuilder,
       invitedArtistBuilder,
-      artistUpdateBuilder,
-      invitationUpdateBuilder
+      artistUpdateBuilder
     );
+    // El canje NO ocurre aqui: ya lo hizo registerArtistWithToken. Si esta rpc
+    // llegara a llamarse gastaria un segundo uso del cupo.
+    (adminClient as unknown as Record<string, unknown>).rpc = vi.fn();
     const user = mockUser({ email: "invited@artist.com" });
 
     const result = await handlePostLogin(
@@ -255,10 +255,11 @@ describe("handlePostLogin", () => {
     );
 
     expect(result.redirectTo).toBe("/artista");
-    // Token validation
-    expect(invitationSelectBuilder.eq).toHaveBeenCalledWith("token", "abc123");
-    expect(invitationSelectBuilder.is).toHaveBeenCalledWith("used_at", null);
-    // Artist association
+    // No se vuelve a canjear: gastaria un segundo uso por la misma persona.
+    expect(
+      (adminClient as unknown as Record<string, ReturnType<typeof vi.fn>>).rpc,
+    ).not.toHaveBeenCalled();
+    // Solo se enlaza la ficha. La association_id ya la puso el registro.
     expect(artistUpdateBuilder.update).toHaveBeenCalledWith({
       user_id: "user-123",
     });
@@ -266,14 +267,9 @@ describe("handlePostLogin", () => {
       "id",
       "invited-artist-789"
     );
-    // Mark used
-    expect(invitationUpdateBuilder.update).toHaveBeenCalledWith(
-      expect.objectContaining({ used_at: expect.any(String) })
-    );
-    expect(invitationUpdateBuilder.eq).toHaveBeenCalledWith("token", "abc123");
   });
 
-  it("skips token association when invitation is expired/used", async () => {
+  it("no enlaza nada si no hay ficha huerfana con ese token", async () => {
     process.env.ADMIN_EMAIL = "admin@other.com";
 
     // Step 0: profile upsert
@@ -282,26 +278,28 @@ describe("handlePostLogin", () => {
     const artistSelectBuilder = mockBuilder({ data: null, error: null });
     // 2nd: artist insert
     const artistInsertBuilder = mockBuilder();
-    // 3rd: invitation select (not found = expired/used)
-    const invitationSelectBuilder = mockBuilder({ data: null, error: null });
+    // 3rd: busqueda por invitation_token -> ninguna sin dueno
+    const sinCandidatosBuilder = mockBuilder({ data: [], error: null });
 
     const adminClient = makeMockClient(
       profileUpsertBuilder,
       artistSelectBuilder,
       artistInsertBuilder,
-      invitationSelectBuilder
+      sinCandidatosBuilder
     );
+    (adminClient as unknown as Record<string, unknown>).rpc = vi.fn();
     const user = mockUser({ email: "someone@artist.com" });
 
     const result = await handlePostLogin(
       stubSupabase,
       adminClient,
       user,
-      "expired-token"
+      "token-sin-fichas"
     );
 
     expect(result.redirectTo).toBe("/artista");
-    // 4 from() calls: profile upsert, artist select, artist insert, invitation check
+    // Se consulta, pero no se actualiza nada al no haber candidata.
     expect(adminClient.from).toHaveBeenCalledTimes(4);
+    expect(sinCandidatosBuilder.update).not.toHaveBeenCalled();
   });
 });
