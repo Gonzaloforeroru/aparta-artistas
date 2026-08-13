@@ -672,7 +672,6 @@ export async function createAssociation(input: {
   name: string;
   shortName?: string | null;
   color?: string | null;
-  logoUrl?: string | null;
 }): Promise<AssociationActionResult> {
   const { supabase, userId, denied } = await requireAssociationAdmin();
   if (denied) return { success: false, error: denied };
@@ -701,7 +700,6 @@ export async function createAssociation(input: {
     slug: slugData as string,
     short_name: shortName,
     color: input.color ?? null,
-    logo_url: input.logoUrl ?? null,
     created_by: userId,
   });
 
@@ -741,7 +739,7 @@ export async function renameAssociation(
 
 export async function updateAssociationPresentation(
   id: string,
-  input: { shortName?: string | null; color?: string | null; logoUrl?: string | null },
+  input: { shortName?: string | null; color?: string | null  },
 ): Promise<AssociationActionResult> {
   const { supabase, denied } = await requireAssociationAdmin();
   if (denied) return { success: false, error: denied };
@@ -755,7 +753,6 @@ export async function updateAssociationPresentation(
     update.short_name = sn;
   }
   if (input.color !== undefined) update.color = input.color ?? null;
-  if (input.logoUrl !== undefined) update.logo_url = input.logoUrl ?? null;
 
   if (Object.keys(update).length === 0) return { success: true };
 

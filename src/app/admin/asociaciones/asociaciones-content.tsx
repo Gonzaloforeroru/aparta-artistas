@@ -130,13 +130,11 @@ export function AsociacionesContent({ associations }: { associations: Associatio
   const [newName, setNewName] = useState("");
   const [newShortName, setNewShortName] = useState("");
   const [newColor, setNewColor] = useState("");
-  const [newLogoUrl, setNewLogoUrl] = useState("");
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editShortName, setEditShortName] = useState("");
   const [editColor, setEditColor] = useState("");
-  const [editLogoUrl, setEditLogoUrl] = useState("");
 
   const [toggleTarget, setToggleTarget] = useState<Association | null>(null);
 
@@ -148,14 +146,12 @@ export function AsociacionesContent({ associations }: { associations: Associatio
         name: newName,
         shortName: newShortName || null,
         color: newColor || null,
-        logoUrl: newLogoUrl || null,
       });
       if (result.success) {
         toast.success("Asociación creada");
         setNewName("");
         setNewShortName("");
         setNewColor("");
-        setNewLogoUrl("");
         setShowCreate(false);
       } else {
         toast.error(result.error);
@@ -168,7 +164,6 @@ export function AsociacionesContent({ associations }: { associations: Associatio
     setEditName(assoc.name);
     setEditShortName(assoc.shortName ?? "");
     setEditColor(assoc.color ?? "");
-    setEditLogoUrl(assoc.logoUrl ?? "");
   }
 
   function cancelEdit() {
@@ -189,12 +184,10 @@ export function AsociacionesContent({ associations }: { associations: Associatio
 
       const shortNameChanged = (editShortName || null) !== (assoc.shortName ?? null);
       const colorChanged = (editColor || null) !== (assoc.color ?? null);
-      const logoChanged = (editLogoUrl || null) !== (assoc.logoUrl ?? null);
-      if (shortNameChanged || colorChanged || logoChanged) {
+      if (shortNameChanged || colorChanged) {
         const result = await updateAssociationPresentation(assoc.id, {
           shortName: editShortName || null,
           color: editColor || null,
-          logoUrl: editLogoUrl || null,
         });
         if (!result.success) {
           toast.error(result.error);
@@ -270,15 +263,6 @@ export function AsociacionesContent({ associations }: { associations: Associatio
               <div className="flex items-center gap-2">
                 <ColorPicker value={newColor} onChange={setNewColor} />
               </div>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-xs text-muted-foreground">Logo URL</Label>
-              <Input
-                placeholder="https://..."
-                value={newLogoUrl}
-                onChange={(e) => setNewLogoUrl(e.target.value)}
-                className="w-[200px] text-xs"
-              />
             </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={handleCreate} disabled={isPending || !newName.trim()}>

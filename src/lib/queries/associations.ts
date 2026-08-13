@@ -7,7 +7,6 @@ export type Association = {
   /** Sigla para sitios estrechos (máx 12 chars). Null si no se definió. */
   shortName: string | null;
   color: string | null;
-  logoUrl: string | null;
   active: boolean;
   createdAt: string;
   artistCount: number;
@@ -19,7 +18,6 @@ type AssociationRow = {
   slug: string;
   short_name: string | null;
   color: string | null;
-  logo_url: string | null;
   active: boolean;
   created_at: string;
   artists: { count: number }[];
@@ -34,7 +32,7 @@ export async function getAssociations(): Promise<Association[]> {
 
   const { data, error } = await supabase
     .from("associations")
-    .select("id, name, slug, short_name, color, logo_url, active, created_at, artists(count)")
+    .select("id, name, slug, short_name, color, active, created_at, artists(count)")
     .order("name", { ascending: true });
 
   if (error) throw error;
@@ -47,7 +45,6 @@ export async function getAssociations(): Promise<Association[]> {
     slug: row.slug,
     shortName: row.short_name,
     color: row.color,
-    logoUrl: row.logo_url,
     active: row.active,
     createdAt: row.created_at,
     artistCount: row.artists?.[0]?.count ?? 0,
