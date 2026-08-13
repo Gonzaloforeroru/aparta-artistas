@@ -12,7 +12,7 @@ const errorMessages: Record<string, string> = {
 };
 
 interface RegistroPageProps {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; token?: string }>;
 }
 
 export default async function RegistroPage({
@@ -35,6 +35,7 @@ export default async function RegistroPage({
 
   const params = await searchParams;
   const error = params.error;
+  const token = params.token;
 
   return (
     <div className="relative flex min-h-svh items-center justify-center overflow-hidden bg-background px-4 py-8">
@@ -70,7 +71,7 @@ export default async function RegistroPage({
         )}
 
         {/* Email/password signup form */}
-        <RegistroEmailForm />
+          <RegistroEmailForm token={token} />
 
         {/* Login link */}
         <p className="text-center text-sm text-[var(--text-tertiary)]">

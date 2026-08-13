@@ -232,7 +232,7 @@ describe("handlePostLogin", () => {
       data: [{ id: "invited-artist-789" }],
       error: null,
     });
-    // 4th: enlazar esa ficha con el usuario
+    // 4th: enlazar esa ficha con el usuario y ponerle la asociacion
     const artistUpdateBuilder = mockBuilder();
 
     const adminClient = makeMockClient(
@@ -242,9 +242,14 @@ describe("handlePostLogin", () => {
       invitedArtistBuilder,
       artistUpdateBuilder
     );
-    // El canje NO ocurre aqui: ya lo hizo registerArtistWithToken. Si esta rpc
-    // llegara a llamarse gastaria un segundo uso del cupo.
-    (adminClient as unknown as Record<string, unknown>).rpc = vi.fn();
+    // El canje ocurre AQUI: es el unico punto donde se consume la invitacion,
+    // porque quien llega por una campana no tiene cuenta hasta este momento.
+    (adminClient as unknown as Record<string, unknown>).rpc = vi
+      .fn()
+      .mockResolvedValue({
+        data: [{ ok: true, association_id: "assoc-1", reason: null }],
+        error: null,
+      });
     const user = mockUser({ email: "invited@artist.com" });
 
     const result = await handlePostLogin(
@@ -255,13 +260,13 @@ describe("handlePostLogin", () => {
     );
 
     expect(result.redirectTo).toBe("/artista");
-    // No se vuelve a canjear: gastaria un segundo uso por la misma persona.
     expect(
       (adminClient as unknown as Record<string, ReturnType<typeof vi.fn>>).rpc,
-    ).not.toHaveBeenCalled();
-    // Solo se enlaza la ficha. La association_id ya la puso el registro.
+    ).toHaveBeenCalledWith("redeem_invitation", { p_token: "abc123" });
+    // Se enlaza la ficha Y se le asigna la insignia que traia la invitacion.
     expect(artistUpdateBuilder.update).toHaveBeenCalledWith({
       user_id: "user-123",
+      association_id: "assoc-1",
     });
     expect(artistUpdateBuilder.eq).toHaveBeenCalledWith(
       "id",
@@ -280,14 +285,24 @@ describe("handlePostLogin", () => {
     const artistInsertBuilder = mockBuilder();
     // 3rd: busqueda por invitation_token -> ninguna sin dueno
     const sinCandidatosBuilder = mockBuilder({ data: [], error: null });
+    // 4th: respaldo, la ficha del propio usuario -> tampoco existe
+    const sinFichaPropiaBuilder = mockBuilder({ data: null, error: null });
 
     const adminClient = makeMockClient(
       profileUpsertBuilder,
       artistSelectBuilder,
       artistInsertBuilder,
-      sinCandidatosBuilder
+      sinCandidatosBuilder,
+      sinFichaPropiaBuilder
     );
-    (adminClient as unknown as Record<string, unknown>).rpc = vi.fn();
+    // La invitacion es valida y se canjea, pero no hay ninguna ficha a la que
+    // aplicarle la insignia.
+    (adminClient as unknown as Record<string, unknown>).rpc = vi
+      .fn()
+      .mockResolvedValue({
+        data: [{ ok: true, association_id: "assoc-1", reason: null }],
+        error: null,
+      });
     const user = mockUser({ email: "someone@artist.com" });
 
     const result = await handlePostLogin(
@@ -298,8 +313,9 @@ describe("handlePostLogin", () => {
     );
 
     expect(result.redirectTo).toBe("/artista");
-    // Se consulta, pero no se actualiza nada al no haber candidata.
-    expect(adminClient.from).toHaveBeenCalledTimes(4);
+    // Se busca por token y luego la propia, pero no se actualiza nada.
+    expect(adminClient.from).toHaveBeenCalledTimes(5);
     expect(sinCandidatosBuilder.update).not.toHaveBeenCalled();
+    expect(sinFichaPropiaBuilder.update).not.toHaveBeenCalled();
   });
 });

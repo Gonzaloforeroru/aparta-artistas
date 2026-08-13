@@ -63,16 +63,33 @@ export async function signUpWithEmail(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const name = formData.get("name") as string;
+  /*
+    El token de invitacion tiene que sobrevivir al alta.
+
+    Quien llega por un enlace de campana casi nunca tiene cuenta: pasa por aqui
+    antes que por el login. Si el token se pierde en este paso, handlePostLogin
+    no puede canjear la invitacion y el artista se queda SIN la insignia de la
+    asociacion, que es justo el motivo de existir del enlace.
+
+    Va tanto a handlePostLogin (alta con sesion inmediata) como al
+    emailRedirectTo (alta que requiere confirmar el correo: el token viaja en
+    el enlace del email y vuelve por /auth/callback).
+  */
+  const token = (formData.get("token") as string) || null;
 
   const supabase = await createClient();
   const origin = process.env.NEXT_PUBLIC_SITE_URL!;
+
+  const callbackUrl = token
+    ? `${origin}/auth/callback?token=${encodeURIComponent(token)}`
+    : `${origin}/auth/callback`;
 
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: { full_name: name },
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo: callbackUrl,
     },
   });
 
@@ -94,7 +111,12 @@ export async function signUpWithEmail(formData: FormData) {
   // If auto-confirmed (session exists), run post-login flow immediately
   if (data.user && data.session) {
     const adminClient = createAdminClient();
-    const { redirectTo } = await handlePostLogin(supabase, adminClient, data.user);
+    const { redirectTo } = await handlePostLogin(
+      supabase,
+      adminClient,
+      data.user,
+      token,
+    );
     revalidatePath("/", "layout");
     redirect(redirectTo);
   }

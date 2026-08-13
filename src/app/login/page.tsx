@@ -89,7 +89,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className="text-center text-sm text-[var(--text-tertiary)]">
           ¿No tienes cuenta?{" "}
           <Link
-            href="/registro"
+                // El token viaja con el enlace: quien llega por una invitacion
+                // de campana casi nunca tiene cuenta, asi que pasa por aqui de
+                // camino al alta. Sin arrastrarlo, se registraria como un
+                // artista cualquiera y perderia la insignia de la asociacion.
+                href={token ? `/registro?token=${encodeURIComponent(token)}` : "/registro"}
             className="font-medium text-foreground underline-offset-4 hover:underline"
           >
             Regístrate

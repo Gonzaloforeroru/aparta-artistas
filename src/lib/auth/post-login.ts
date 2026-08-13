@@ -142,33 +142,58 @@ export async function handlePostLogin(
   // The adminClient (service role) calls the RPC so it works even if the user's
   // role has no direct access to the invitations table.
   if (token) {
-    // AQUI NO SE CANJEA.
-    //
-    // El canje ya lo hizo registerArtistWithToken al crear la ficha, y ahi se
-    // asigno tambien la association_id. Volver a llamar a redeem_invitation
-    // gastaria un SEGUNDO uso por la misma persona: una campana con cupo 10
-    // solo habria servido a 5. Lo unico que falta aqui es enlazar la ficha
-    // (creada sin sesion) con la cuenta que acaba de entrar.
-    //
-    // Tampoco se puede usar maybeSingle() filtrando solo por el token: en una
-    // campana MUCHAS fichas comparten el mismo invitation_token, y en cuanto
-    // hubiera dos la consulta reventaba. Se acota a las que aun no tienen
-    // dueno y se toma la mas reciente.
-    const { data: candidatos } = await adminClient
-      .from("artists")
-      .select("id")
-      .eq("invitation_token", token)
-      .is("user_id", null)
-      .order("created_at", { ascending: false })
-      .limit(1);
+    /*
+      Este es el UNICO punto donde se canjea una invitacion.
 
-    const invitedArtist = candidatos?.[0];
+      El canje vive aqui y no en el formulario de registro porque quien llega
+      por un enlace de campana normalmente no tiene cuenta todavia: primero
+      crea usuario y contrasena, y solo entonces existe alguien a quien
+      asignarle la insignia. Hacerlo antes dejaria la ficha sin dueno.
 
-    if (invitedArtist) {
-      await adminClient
+      redeem_invitation es atomico: mete todas las condiciones de validez en el
+      WHERE de un solo UPDATE, asi que dos personas canjeando el mismo enlace a
+      la vez no pueden pasarse del cupo.
+    */
+    const { data: redeemResult } = await adminClient.rpc("redeem_invitation", {
+      p_token: token,
+    });
+    const redeem = Array.isArray(redeemResult) ? redeemResult[0] : redeemResult;
+
+    if (redeem?.ok) {
+      // La ficha puede existir ya (invitacion personal: el admin la creo y le
+      // puso el token) o no (campana: la acabamos de crear en el paso 3).
+      // Se busca primero la que tenga el token y aun no tenga dueno; si no hay,
+      // se usa la del propio usuario.
+      const { data: porToken } = await adminClient
         .from("artists")
-        .update({ user_id: user.id })
-        .eq("id", invitedArtist.id);
+        .select("id")
+        .eq("invitation_token", token)
+        .is("user_id", null)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      const objetivo = porToken?.[0]?.id
+        ? { id: porToken[0].id, enlazar: true }
+        : await adminClient
+            .from("artists")
+            .select("id")
+            .eq("user_id", user.id)
+            .maybeSingle()
+            .then((r) => (r.data ? { id: r.data.id, enlazar: false } : null));
+
+      if (objetivo) {
+        await adminClient
+          .from("artists")
+          .update({
+            ...(objetivo.enlazar ? { user_id: user.id } : {}),
+            // Solo se escribe si la invitacion traia asociacion: un enlace sin
+            // insignia no debe borrar la que el admin pusiera a mano.
+            ...(redeem.association_id
+              ? { association_id: redeem.association_id }
+              : {}),
+          })
+          .eq("id", objetivo.id);
+      }
     }
   }
 

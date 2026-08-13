@@ -6,7 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { signUpWithEmail } from "@/app/login/actions";
 
-export function RegistroEmailForm() {
+/**
+ * @param token Invitacion por la que llega, si viene de un enlace. Se reenvia
+ * en un campo oculto para que signUpWithEmail pueda canjearla: sin el, quien se
+ * registra por una campana pierde la insignia de la asociacion.
+ */
+export function RegistroEmailForm({ token }: { token?: string }) {
   const [isPending, startTransition] = useTransition();
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -31,6 +36,7 @@ export function RegistroEmailForm() {
 
   return (
     <form action={handleSubmit} className="flex flex-col gap-4">
+      {token && <input type="hidden" name="token" value={token} />}
       {localError && (
         <div className="rounded-lg bg-[var(--error-bg)] px-4 py-3 text-sm text-[var(--error)]">
           {localError}
