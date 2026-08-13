@@ -28,6 +28,92 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 
+/**
+ * Paleta fija para las insignias.
+ *
+ * No son colores elegidos al azar: la insignia se pinta sobre el fondo OSCURO
+ * de la tarjeta, usando el color para el texto y el borde. Un azul marino o un
+ * granate quedarian ilegibles ahi. Todos estos tienen luminosidad suficiente
+ * para leerse sobre oscuro.
+ */
+const COLORES = [
+  { hex: "#2f7bf6", nombre: "Azul" },
+  { hex: "#22b8cf", nombre: "Turquesa" },
+  { hex: "#12b886", nombre: "Verde" },
+  { hex: "#82c91e", nombre: "Lima" },
+  { hex: "#fab005", nombre: "Ámbar" },
+  { hex: "#f59f00", nombre: "Naranja" },
+  { hex: "#fa5252", nombre: "Rojo" },
+  { hex: "#e64980", nombre: "Rosa" },
+  { hex: "#7950f2", nombre: "Morado" },
+  { hex: "#adb5bd", nombre: "Gris" },
+];
+
+/**
+ * Selector de color por paleta.
+ *
+ * Antes era un campo de texto donde habia que teclear "#6366f1" de memoria.
+ * Nadie sabe codigos hexadecimales, asi que en la practica el color se quedaba
+ * vacio. Se elige pulsando, y queda el cuentagotas del navegador para cuando la
+ * institucion tenga un color de marca concreto.
+ */
+function ColorPicker({
+  value,
+  onChange,
+  compact = false,
+}: {
+  value: string;
+  onChange: (hex: string) => void;
+  compact?: boolean;
+}) {
+  const size = compact ? "size-5" : "size-7";
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {COLORES.map((c) => (
+        <button
+          key={c.hex}
+          type="button"
+          title={c.nombre}
+          aria-label={c.nombre}
+          aria-pressed={value.toLowerCase() === c.hex}
+          onClick={() => onChange(value.toLowerCase() === c.hex ? "" : c.hex)}
+          className={`${size} rounded-full transition-transform hover:scale-110 ${
+            value.toLowerCase() === c.hex
+              ? "ring-2 ring-white ring-offset-2 ring-offset-[var(--background)]"
+              : "ring-1 ring-white/20"
+          }`}
+          style={{ backgroundColor: c.hex }}
+        />
+      ))}
+      {/* Escape para colores de marca que no esten en la paleta. */}
+      <label
+        title="Otro color"
+        className={`${size} relative cursor-pointer overflow-hidden rounded-full ring-1 ring-white/20`}
+        style={{
+          background:
+            "conic-gradient(#fa5252,#fab005,#82c91e,#12b886,#22b8cf,#2f7bf6,#7950f2,#e64980,#fa5252)",
+        }}
+      >
+        <input
+          type="color"
+          value={value || "#2f7bf6"}
+          onChange={(e) => onChange(e.target.value)}
+          className="absolute inset-0 cursor-pointer opacity-0"
+        />
+      </label>
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          className="text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground"
+        >
+          Quitar
+        </button>
+      )}
+    </div>
+  );
+}
+
 function ColorDot({ color }: { color: string | null }) {
   if (!color) return <span className="text-xs text-muted-foreground">—</span>;
   return (
@@ -178,25 +264,11 @@ export function AsociacionesContent({ associations }: { associations: Associatio
                 maxLength={12}
                 className="w-[100px] font-mono text-xs"
               />
-              <p className="text-[11px] text-muted-foreground leading-tight">
-                Se usa en la tarjeta del catálogo cuando el nombre es largo
-              </p>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs text-muted-foreground">Color (hex)</Label>
+              <Label className="text-xs text-muted-foreground">Color de la insignia</Label>
               <div className="flex items-center gap-2">
-                <Input
-                  placeholder="#6366f1"
-                  value={newColor}
-                  onChange={(e) => setNewColor(e.target.value)}
-                  className="w-[120px] font-mono text-xs"
-                />
-                {newColor && (
-                  <div
-                    className="h-8 w-8 shrink-0 rounded-md border border-border"
-                    style={{ backgroundColor: newColor }}
-                  />
-                )}
+                <ColorPicker value={newColor} onChange={setNewColor} />
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -222,6 +294,19 @@ export function AsociacionesContent({ associations }: { associations: Associatio
               </Button>
             </div>
           </div>
+
+          {/*
+            La ayuda va bajo la fila entera y no colgando del campo Sigla.
+            Dentro de la columna anadia alto solo a esa, y como la fila alinea
+            por abajo (items-end) le levantaba el input y rompia la simetria de
+            todos los demas.
+          */}
+          <p className="mt-2.5 text-[11px] leading-tight text-muted-foreground">
+            La <strong className="font-semibold">sigla</strong> se usa en la
+            tarjeta del catálogo cuando el nombre es largo, y el{" "}
+            <strong className="font-semibold">color</strong> es el de la insignia
+            que verá el público.
+          </p>
         </div>
       )}
 
@@ -266,20 +351,7 @@ export function AsociacionesContent({ associations }: { associations: Associatio
                       />
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        <Input
-                          value={editColor}
-                          onChange={(e) => setEditColor(e.target.value)}
-                          placeholder="#hex"
-                          className="h-8 w-[80px] font-mono text-xs"
-                        />
-                        {editColor && (
-                          <div
-                            className="h-6 w-6 shrink-0 rounded border border-border"
-                            style={{ backgroundColor: editColor }}
-                          />
-                        )}
-                      </div>
+                      <ColorPicker value={editColor} onChange={setEditColor} compact />
                     </TableCell>
                     <TableCell className="text-center tabular-nums text-sm text-muted-foreground">
                       {assoc.artistCount}
