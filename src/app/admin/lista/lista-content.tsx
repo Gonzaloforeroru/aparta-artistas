@@ -14,10 +14,11 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { cities, artistTypes, formatPrice } from "@/lib/data";
+import { cities, formatPrice } from "@/lib/data";
 import type { Tables, ArtistStatus } from "@/lib/supabase/database.types";
 import { deleteArtist, toggleArtistActive, updateArtistAssociation } from "@/app/admin/actions";
 import type { Association } from "@/lib/queries/associations";
+import type { Tag } from "@/lib/queries/tags";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -42,9 +43,10 @@ function StatusBadge({ status }: { status: ArtistStatus }) {
 interface ListaContentProps {
   artists: Artist[];
   associations: Association[];
+  typeOptions: Tag[];
 }
 
-export function ListaContent({ artists, associations }: ListaContentProps) {
+export function ListaContent({ artists, associations, typeOptions }: ListaContentProps) {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("all");
@@ -155,7 +157,7 @@ export function ListaContent({ artists, associations }: ListaContentProps) {
               </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas las profesiones</SelectItem>
-              {artistTypes.map((t) => (<SelectItem key={t} value={t}>{t}</SelectItem>))}
+              {typeOptions.map((t) => (<SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>))}
             </SelectContent>
           </Select>
           <Select value={cityFilter} onValueChange={(v) => { setCityFilter(v ?? "all"); setPage(1); }}>

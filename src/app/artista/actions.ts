@@ -11,11 +11,22 @@ import type { Tables } from "@/lib/supabase/database.types";
 
 export type Artist = Tables<"artists">;
 
+export type ArtistAssociation = {
+  id: string;
+  name: string;
+  short_name: string | null;
+  color: string | null;
+};
+
+export type ArtistWithAssociation = Artist & {
+  association: ArtistAssociation | null;
+};
+
 /**
  * Fetch the current authenticated user's artist profile.
- * Returns the artist record or null if not found / not authenticated.
+ * Returns the artist record (with association if any) or null if not found / not authenticated.
  */
-export async function getMyArtistProfile(): Promise<Artist | null> {
+export async function getMyArtistProfile(): Promise<ArtistWithAssociation | null> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -25,12 +36,12 @@ export async function getMyArtistProfile(): Promise<Artist | null> {
 
   const { data, error } = await supabase
     .from("artists")
-    .select("*")
+    .select("*, association:associations(id, name, short_name, color)")
     .eq("user_id", user.id)
     .single();
 
   if (error) return null;
-  return data;
+  return data as ArtistWithAssociation;
 }
 
 /**
@@ -173,10 +184,10 @@ export async function updateMyArtistProfile(
   /**
    * Sincroniza los tags elegidos.
    *
-   * Solo se tocan los kinds editables por el artista: las insignias (`badge`)
-   * las concede el admin y se reclaman aparte, asi que si alguien mete a mano
-   * un id de badge en el formulario, el filtro por kind lo descarta antes de
-   * llegar a la BD.
+   * Solo se tocan los kinds editables por el artista. La insignia de asociacion
+   * NO vive aqui: es `artists.association_id` y la concede el admin o un enlace
+   * de invitacion, asi que el artista no puede tocarla ni colandola en este
+   * formulario.
    *
    * Se borra y se inserta solo la diferencia, en vez de "delete all + insert":
    * asi no se pierde el created_at ni el source de lo que ya estaba.

@@ -21,7 +21,7 @@ const SEARCH_THRESHOLD = 20;
 const MAX_RESULTS = 24;
 
 type Props = {
-  kind: Exclude<TagKind, "badge">;
+  kind: TagKind;
   label: string;
   /** Catalogo oficial. Lo gestiona el admin; el artista solo elige. */
   options: Tag[];

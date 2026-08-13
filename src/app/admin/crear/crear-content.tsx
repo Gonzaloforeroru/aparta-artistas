@@ -11,10 +11,12 @@ import { Separator } from "@/components/ui/separator";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { cities, artistTypes, genres } from "@/lib/data";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { cities } from "@/lib/data";
 import type { Tables } from "@/lib/supabase/database.types";
 import type { Association } from "@/lib/queries/associations";
-import { createArtist, updateArtist, removeArtistPhoto } from "@/app/admin/actions";
+import type { Tag } from "@/lib/queries/tags";
+import { createArtist, updateArtist } from "@/app/admin/actions";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon, Upload01Icon, BubbleChatIcon, Delete01Icon } from "@hugeicons/core-free-icons";
 import { InstagramIcon, YoutubeIcon, TikTokIcon, SpotifyIcon } from "@/components/social-icons";
@@ -26,9 +28,11 @@ type Artist = Tables<"artists">;
 interface CrearContentProps {
   existingArtist: Artist | null;
   associations: Association[];
+  typeOptions: Tag[];
+  genreOptions: Tag[];
 }
 
-export function CrearContent({ existingArtist, associations }: CrearContentProps) {
+export function CrearContent({ existingArtist, associations, typeOptions, genreOptions }: CrearContentProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [photoPreview, setPhotoPreview] = useState<string | null>(existingArtist?.photo ?? null);
@@ -36,8 +40,15 @@ export function CrearContent({ existingArtist, associations }: CrearContentProps
   const [associationId, setAssociationId] = useState<string>(
     existingArtist?.association_id ?? "none",
   );
+  const [selectedType, setSelectedType] = useState(existingArtist?.type ?? "");
+  const [selectedGenre, setSelectedGenre] = useState(existingArtist?.genre ?? "");
   const isEditing = !!existingArtist;
   const activeAssociations = associations.filter((a) => a.active);
+
+  const genreSelectOptions = genreOptions.map((t) => ({
+    value: t.name,
+    label: t.name,
+  }));
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -49,6 +60,8 @@ export function CrearContent({ existingArtist, associations }: CrearContentProps
       formData.set("deletePhoto", "true");
     }
     formData.set("association_id", associationId);
+    formData.set("type", selectedType);
+    formData.set("genre", selectedGenre);
     startTransition(async () => {
       try {
         if (isEditing) {
@@ -157,17 +170,30 @@ export function CrearContent({ existingArtist, associations }: CrearContentProps
                    </div>
                   <div className="flex flex-col gap-2">
                     <Label>Profesión <span className="text-destructive">*</span></Label>
-                    <Select name="type" defaultValue={existingArtist?.type ?? ""} required>
-                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                      <SelectContent>{artistTypes.map((t) => (<SelectItem key={t} value={t}>{t}</SelectItem>))}</SelectContent>
+                    <Select
+                      value={selectedType}
+                      onValueChange={(v) => setSelectedType(v ?? "")}
+                      required
+                    >
+                      <SelectTrigger>
+                        <SelectValue>{selectedType || "Seleccionar"}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {typeOptions.map((t) => (
+                          <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label>Género Musical <span className="text-destructive">*</span></Label>
-                    <Select name="genre" defaultValue={existingArtist?.genre ?? ""} required>
-                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                      <SelectContent>{genres.map((g) => (<SelectItem key={g} value={g}>{g}</SelectItem>))}</SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      value={selectedGenre}
+                      onValueChange={setSelectedGenre}
+                      options={genreSelectOptions}
+                      placeholder="Seleccionar género"
+                      required
+                    />
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="phone">WhatsApp <span className="text-destructive">*</span></Label>

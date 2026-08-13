@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { getMyArtistProfile } from "@/app/artista/actions"
+import type { Artist } from "@/app/artista/actions"
 import { ensureArtistProfile } from "@/lib/auth/ensure-artist"
 import { signOut } from "@/app/login/actions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -46,7 +47,7 @@ export default async function ArtistaLayout({
   // the user straight back to /artista and the browser spins in an infinite
   // redirect loop with no visible error. If the record is missing we create it
   // on the spot; only a genuine write failure shows an error screen.
-  let artist = await getMyArtistProfile()
+  let artist: Artist | null = await getMyArtistProfile()
 
   if (!artist) {
     artist = await ensureArtistProfile()

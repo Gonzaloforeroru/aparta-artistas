@@ -224,12 +224,13 @@ function ArtistCard({ artist }: { artist: ArtistWithTags }) {
             linea meta junto a la ciudad.
 
             Una insignia no es un descriptor del artista (como el genero): es el
-            respaldo de una institucion que responde por el, y el CHECK
-            tags_badge_always_official garantiza que nadie se la puede inventar.
-            Colgada de la linea de la ciudad se leia como un dato mas y, en
-            cuanto un artista acumulaba dos, la linea crecia sin control.
+            respaldo de una institucion que responde por el. Por eso vive en
+            `artists.association_id` y no entre los tags: solo la concede el
+            admin o un enlace de invitacion, nadie se la puede inventar.
+            Colgada de la linea de la ciudad se leia como un dato mas y hacia
+            crecer la linea sin control.
 
-            El color sale del propio tag para que cada institucion se reconozca
+            El color sale de la propia asociacion para que se reconozca
             de un vistazo. Se usa color-mix y no un hex con alfa porque el color
             lo teclea el admin y puede venir en cualquier formato CSS valido.
           */}

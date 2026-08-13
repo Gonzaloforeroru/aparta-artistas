@@ -1,0 +1,309 @@
+"use client";
+
+import { useState, useTransition, useMemo } from "react";
+import { toast } from "sonner";
+import { importArtists } from "@/app/admin/actions";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Upload01Icon, FileSpreadsheetIcon, CheckmarkCircle01Icon,
+  CancelCircleIcon, Download01Icon,
+} from "@hugeicons/core-free-icons";
+
+/** "Electrónica" -> "electronica", para poder comparar sin tildes. */
+function fold(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
+interface CsvRow {
+  nombre: string;
+  email: string;
+  ciudad: string;
+  tipo: string;
+  genero: string;
+  telefono: string;
+  precio: string;
+  duracion: string;
+  website: string;
+  /** Nombre canónico resuelto del tipo (para enviar al server). */
+  tipoResuelto: string;
+  /** Nombre canónico resuelto del género (para enviar al server). */
+  generoResuelto: string;
+  valid: boolean;
+  error?: string;
+}
+
+/**
+ * Busca el nombre canónico en la lista oficial con comparación insensible a
+ * tildes y mayúsculas. Un CSV con "electronica" casa con "Electrónica".
+ */
+function resolveCanonical(
+  value: string,
+  catalog: string[],
+  foldedMap: Map<string, string>,
+): string | null {
+  const folded = fold(value.trim());
+  return foldedMap.get(folded) ?? null;
+}
+
+function buildValidator(validTypes: string[], validGenres: string[]) {
+  const foldedTypes = new Map(validTypes.map((t) => [fold(t), t]));
+  const foldedGenres = new Map(validGenres.map((g) => [fold(g), g]));
+
+  return function validateRow(
+    row: Omit<CsvRow, "valid" | "error" | "tipoResuelto" | "generoResuelto">,
+  ): { valid: boolean; error?: string; tipoResuelto: string; generoResuelto: string } {
+    if (!row.nombre?.trim()) return { valid: false, error: "Nombre requerido", tipoResuelto: "", generoResuelto: "" };
+    if (!row.email?.trim()) return { valid: false, error: "Email requerido", tipoResuelto: "", generoResuelto: "" };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email.trim()))
+      return { valid: false, error: "Email inválido", tipoResuelto: "", generoResuelto: "" };
+    if (!row.ciudad?.trim()) return { valid: false, error: "Ciudad requerida", tipoResuelto: "", generoResuelto: "" };
+    if (!row.tipo?.trim()) return { valid: false, error: "Tipo requerido", tipoResuelto: "", generoResuelto: "" };
+
+    const tipoResuelto = resolveCanonical(row.tipo, validTypes, foldedTypes);
+    if (!tipoResuelto)
+      return { valid: false, error: `Tipo inválido: ${row.tipo}`, tipoResuelto: "", generoResuelto: "" };
+
+    if (!row.genero?.trim()) return { valid: false, error: "Género requerido", tipoResuelto, generoResuelto: "" };
+
+    const generoResuelto = resolveCanonical(row.genero, validGenres, foldedGenres);
+    if (!generoResuelto)
+      return { valid: false, error: `Género inválido: ${row.genero}`, tipoResuelto, generoResuelto: "" };
+
+    if (!row.telefono?.trim())
+      return { valid: false, error: "Teléfono requerido", tipoResuelto, generoResuelto };
+    if (!row.precio?.trim() || isNaN(Number(row.precio)))
+      return { valid: false, error: "Precio inválido", tipoResuelto, generoResuelto };
+    if (!row.duracion?.trim())
+      return { valid: false, error: "Duración requerida", tipoResuelto, generoResuelto };
+
+    return { valid: true, tipoResuelto, generoResuelto };
+  };
+}
+
+function buildParseCsv(validTypes: string[], validGenres: string[]) {
+  const validateRow = buildValidator(validTypes, validGenres);
+
+  return function parseCsv(text: string): CsvRow[] {
+    const lines = text.trim().split("\n");
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    return lines.slice(1).map((line) => {
+      const values = line.split(",").map((v) => v.trim());
+      const raw: Record<string, string> = {};
+      headers.forEach((h, i) => { raw[h] = values[i] ?? ""; });
+      const row = {
+        nombre: raw["nombre"] ?? "", email: raw["email"] ?? "",
+        ciudad: raw["ciudad"] ?? "", tipo: raw["tipo"] ?? "",
+        genero: raw["genero"] ?? "", telefono: raw["telefono"] ?? "",
+        precio: raw["precio"] ?? "", duracion: raw["duracion"] ?? "",
+        website: raw["website"] ?? raw["sitio_web"] ?? "",
+      };
+      const validation = validateRow(row);
+      return { ...row, ...validation };
+    });
+  };
+}
+
+function downloadTemplate() {
+  const headers = ["nombre", "email", "ciudad", "tipo", "genero", "telefono", "precio", "duracion", "instagram", "tiktok", "youtube", "spotify", "website"];
+  const exampleRow = [
+    "Juan Pérez",
+    "juan@correo.com",
+    "Bogotá",
+    "Solista",
+    "Vallenato",
+    "3101234567",
+    "500000",
+    "2 horas",
+    "https://instagram.com/juanperez",
+    "https://tiktok.com/@juanperez",
+    "https://youtube.com/@juanperez",
+    "https://open.spotify.com/artist/juanperez",
+    "https://juanperez.com"
+  ];
+  const csvContent = [headers.join(","), exampleRow.join(",")].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "plantilla_artistas.csv";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+interface ImportarContentProps {
+  validTypes: string[];
+  validGenres: string[];
+}
+
+export function ImportarContent({ validTypes, validGenres }: ImportarContentProps) {
+  const [preview, setPreview] = useState<CsvRow[] | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  const parseCsv = useMemo(
+    () => buildParseCsv(validTypes, validGenres),
+    [validTypes, validGenres],
+  );
+
+  function handleFile(file?: File) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      setPreview(parseCsv(text));
+    };
+    reader.readAsText(file);
+  }
+
+  function handleImport() {
+    const validRows = preview?.filter((r) => r.valid) ?? [];
+    if (validRows.length === 0) return;
+    startTransition(async () => {
+      try {
+        const rows = validRows.map((r) => ({
+          name: r.nombre, email: r.email.trim().toLowerCase(),
+          city: r.ciudad, type: r.tipoResuelto,
+          genre: r.generoResuelto, phone: r.telefono,
+          price: parseInt(r.precio), duration: r.duracion,
+          website: r.website?.trim() || undefined,
+        }));
+        const result = await importArtists(rows);
+        toast.success(`${result.count} artistas importados exitosamente`);
+        setPreview(null);
+      } catch { toast.error("Error al importar artistas"); }
+    });
+  }
+
+  const validCount = preview?.filter((r) => r.valid).length ?? 0;
+  const invalidCount = preview?.filter((r) => !r.valid).length ?? 0;
+
+  return (
+    <div className="flex flex-1 flex-col gap-6 p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Importar Artistas</h1>
+          <p className="text-sm text-muted-foreground">Carga masiva de artistas desde archivo CSV</p>
+        </div>
+        <Button variant="outline" size="sm" className="gap-2" onClick={downloadTemplate}>
+          <HugeiconsIcon icon={Download01Icon} className="size-4" />
+          Descargar plantilla CSV
+        </Button>
+      </div>
+
+       {!preview ? (
+<Card
+            className={`border-2 border-dashed transition-colors ${isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50"}`}
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFile(e.dataTransfer.files[0]); }}
+        >
+          <CardContent className="flex flex-col items-center justify-center gap-4 py-16">
+            <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
+              <HugeiconsIcon icon={FileSpreadsheetIcon} className="size-8 text-primary" />
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-semibold text-foreground">Arrastra tu archivo CSV aquí</p>
+              <p className="text-sm text-muted-foreground mt-1">o haz clic para seleccionar</p>
+            </div>
+            <Button nativeButton={false} render={<label />} variant="outline" className="gap-2">
+              <HugeiconsIcon icon={Upload01Icon} className="size-4" />
+              Seleccionar archivo
+              <input type="file" accept=".csv" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Columnas: nombre, email, ciudad, tipo, genero, telefono, precio, duracion, instagram, tiktok, youtube, spotify, website.
+              Los valores de tipo y género se comparan sin distinguir tildes ni mayúsculas.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+         <div className="flex flex-col gap-4">
+           <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Vista previa</CardTitle>
+                  <CardDescription>{preview.length} filas encontradas</CardDescription>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary" className="bg-[var(--success-bg)] text-[var(--success)]">
+                    <HugeiconsIcon icon={CheckmarkCircle01Icon} className="mr-1 size-3" /> {validCount} válidas
+                  </Badge>
+                  {invalidCount > 0 && (
+                    <Badge variant="secondary" className="bg-[var(--error-bg)] text-[var(--error)]">
+                      <HugeiconsIcon icon={CancelCircleIcon} className="mr-1 size-3" /> {invalidCount} con errores
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+               <div className="rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10"></TableHead>
+                       <TableHead>Nombre</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Ciudad</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Género</TableHead>
+                      <TableHead>Teléfono</TableHead>
+                      <TableHead>Precio</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {preview.map((row, i) => (
+                      <TableRow key={i} className={row.valid ? "" : "bg-[var(--error-bg)]/30"}>
+                        <TableCell>
+                          {row.valid ? (
+                            <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-4 text-[var(--success)]" />
+                          ) : (
+                            <HugeiconsIcon icon={CancelCircleIcon} className="size-4 text-[var(--error)]" />
+                          )}
+                        </TableCell>
+                        <TableCell className="font-medium">{row.nombre || <span className="text-[var(--error)] italic">vacío</span>}</TableCell>
+                        <TableCell>{row.email || <span className="text-[var(--error)] italic">vacío</span>}</TableCell>
+                        <TableCell>{row.ciudad}</TableCell>
+                        <TableCell>{row.tipo}</TableCell>
+                        <TableCell>{row.genero}</TableCell>
+                        <TableCell>{row.telefono}</TableCell>
+                        <TableCell>{row.precio}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex items-center justify-end gap-3">
+            <Button variant="outline" onClick={() => setPreview(null)}>Cancelar</Button>
+            <Button onClick={handleImport} disabled={isPending || validCount === 0} className="gap-2">
+              <HugeiconsIcon icon={Upload01Icon} className="size-4" />
+              {isPending ? "Importando..." : `Importar ${validCount} artistas válidos`}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

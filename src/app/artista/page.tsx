@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { getMyArtistProfile } from "@/app/artista/actions";
+import type { ArtistAssociation } from "@/app/artista/actions";
 import { ensureArtistProfile } from "@/lib/auth/ensure-artist";
 import { isProfileComplete } from "@/app/artista/utils";
 import { formatPrice } from "@/lib/data";
@@ -105,7 +106,8 @@ export default async function ArtistaProfilePage() {
   // /login bounces straight back here and the browser loops. Pages render in
   // parallel with the layout, so this page has to self-heal on its own instead
   // of trusting the layout to have done it already.
-  const artist = (await getMyArtistProfile()) ?? (await ensureArtistProfile());
+  const myProfile = await getMyArtistProfile();
+  const artist = myProfile ?? (await ensureArtistProfile());
 
   if (!artist) {
     notFound();
@@ -117,6 +119,10 @@ export default async function ArtistaProfilePage() {
   if (!isProfileComplete(artist)) {
     redirect("/artista/completar");
   }
+
+  // getMyArtistProfile includes the association join; the fallback
+  // (ensureArtistProfile) doesn't — new users never have one.
+  const association: ArtistAssociation | null = myProfile?.association ?? null;
 
   const status = statusConfig[artist.status ?? "Pendiente"] ?? statusConfig.Pendiente;
 
@@ -161,7 +167,7 @@ export default async function ArtistaProfilePage() {
 
             {/* RIGHT — Details */}
             <div className="flex flex-1 flex-col gap-6">
-              {/* Name + Status */}
+              {/* Name + Status + Association */}
               <div>
                 <div className="flex flex-wrap items-center gap-3">
                   <h2 className="text-2xl font-bold tracking-tight text-foreground">
@@ -170,10 +176,24 @@ export default async function ArtistaProfilePage() {
                   <Badge variant="secondary" className={status.className}>
                     {status.label}
                   </Badge>
+                  {association && (
+                    <Badge
+                      variant="secondary"
+                      className="border-0 text-white"
+                      style={{ backgroundColor: association.color ?? "#2f7bf6" }}
+                    >
+                      {association.short_name?.trim() || association.name}
+                    </Badge>
+                  )}
                 </div>
                 {artist.type && (
                   <p className="mt-1 text-sm text-[var(--text-muted)]">
                     {artist.type}
+                  </p>
+                )}
+                {association && (
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    Avalado por {association.name}. Solo el administrador puede cambiar esta insignia.
                   </p>
                 )}
               </div>

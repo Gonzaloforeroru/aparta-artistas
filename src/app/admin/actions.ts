@@ -12,6 +12,82 @@ import type { TagKind } from "@/lib/queries/tags";
 // ARTIST CRUD
 // ═══════════════════════════════════════════
 
+/**
+ * Sincroniza artist_tags de tipo y género desde las columnas espejo del artista.
+ *
+ * El admin rellena `artists.type` y `artists.genre` como texto;
+ * esta función busca el tag oficial correspondiente por slug y lo inserta
+ * en `artist_tags` con `source: 'admin'`, `status: 'approved'`.
+ *
+ * Si el tag no existe en el catálogo, simplemente no se inserta.
+ *
+ * En modo update borra primero las etiquetas con `source = 'admin'` de
+ * kinds `artist_type` y `genre`, sin tocar las de `source = 'self'`.
+ */
+async function syncAdminArtistTags(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  artistId: string,
+  type: string | null,
+  genre: string | null,
+  isUpdate: boolean,
+) {
+  if (isUpdate) {
+    const { data: existing } = await supabase
+      .from("artist_tags")
+      .select("tag_id, tags!inner(kind)")
+      .eq("artist_id", artistId)
+      .eq("source", "admin")
+      .in("tags.kind", ["artist_type", "genre"]);
+
+    if (existing?.length) {
+      await supabase
+        .from("artist_tags")
+        .delete()
+        .eq("artist_id", artistId)
+        .eq("source", "admin")
+        .in(
+          "tag_id",
+          existing.map((r) => r.tag_id),
+        );
+    }
+  }
+
+  const tagIds: string[] = [];
+
+  for (const [value, kind] of [
+    [type, "artist_type"],
+    [genre, "genre"],
+  ] as [string | null, string][]) {
+    if (!value) continue;
+
+    const { data: slugData } = await supabase.rpc("slugify", {
+      p_text: value,
+    });
+    if (!slugData) continue;
+
+    const { data: tag } = await supabase
+      .from("tags")
+      .select("id")
+      .eq("kind", kind)
+      .eq("slug", slugData as string)
+      .single();
+
+    if (tag) tagIds.push(tag.id);
+  }
+
+  if (tagIds.length > 0) {
+    await supabase.from("artist_tags").upsert(
+      tagIds.map((tagId) => ({
+        artist_id: artistId,
+        tag_id: tagId,
+        source: "admin",
+        status: "approved",
+      })),
+      { ignoreDuplicates: true },
+    );
+  }
+}
+
 export async function createArtist(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -49,6 +125,15 @@ export async function createArtist(formData: FormData) {
      .single();
 
   if (error) throw error;
+
+  // Sincronizar artist_tags de tipo y género
+  await syncAdminArtistTags(
+    supabase,
+    artistData.id,
+    formData.get("type") as string | null,
+    formData.get("genre") as string | null,
+    false,
+  );
 
   // Upload photo if provided
   if (photoFile && photoFile.size > 0) {
@@ -122,9 +207,19 @@ export async function updateArtist(id: string, formData: FormData) {
        photo: photoUrl,
        association_id: associationId,
      })
-     .eq("id", id);
+           .eq("id", id);
 
   if (error) throw error;
+
+  // Sincronizar artist_tags de tipo y género
+  await syncAdminArtistTags(
+    supabase,
+    id,
+    formData.get("type") as string | null,
+    formData.get("genre") as string | null,
+    true,
+  );
+
   revalidatePath("/admin/lista");
   revalidatePath("/catalogo");
 }
@@ -344,6 +439,17 @@ export async function importArtists(rows: ArtistImportRow[]) {
 
   if (error) throw error;
 
+  // Sincronizar artist_tags de tipo y género para cada artista importado
+  for (const artist of data) {
+    await syncAdminArtistTags(
+      supabase,
+      artist.id,
+      artist.type,
+      artist.genre,
+      false,
+    );
+  }
+
   revalidatePath("/admin/lista");
   revalidatePath("/admin/metricas");
   revalidatePath("/catalogo");
@@ -408,6 +514,15 @@ export async function registerArtistWithToken(token: string, formData: FormData)
     .single();
 
   if (artistError) throw artistError;
+
+  // Sincronizar artist_tags de tipo y género
+  await syncAdminArtistTags(
+    supabase,
+    artistData.id,
+    formData.get("type") as string | null,
+    formData.get("genre") as string | null,
+    false,
+  );
 
   // Upload photo if provided
   if (photoFile && photoFile.size > 0) {
@@ -504,10 +619,8 @@ export async function rejectTag(tagId: string): Promise<TagActionResult> {
 /**
  * Alta de tag por el admin. Siempre `is_official: true`.
  *
- * No es una preferencia: el CHECK `tags_badge_always_official` prohibe una
- * insignia no oficial, y para el resto de kinds no tiene sentido que el admin
- * cree algo pendiente de su propia aprobacion. Las propuestas de artistas
- * entran por la RPC propose_tag(), nunca por aqui.
+ * No tiene sentido que el admin cree algo pendiente de su propia aprobacion.
+ * Las propuestas de artistas entran por la RPC propose_tag(), nunca por aqui.
  *
  * El slug lo calcula la funcion slugify() de la base y no una copia en TS para
  * que sea identico al que genera propose_tag(): dos implementaciones distintas
@@ -618,9 +731,8 @@ export async function updateTagPresentation(
  * Archiva un tag: sale del catalogo publico y de los formularios, pero sus
  * asociaciones en artist_tags sobreviven intactas.
  *
- * Vale igual para insignias: `archived_at` es independiente de `is_official`,
- * asi que archivar un badge no choca con el CHECK tags_badge_always_official
- * (que solo prohibe is_official = false cuando kind = 'badge').
+ * Archivar es reversible con unarchiveTag, a diferencia de borrar: el CASCADE
+ * de artist_tags.tag_id se llevaria el tag de todos los artistas que lo usan.
  */
 export async function archiveTag(tagId: string): Promise<TagActionResult> {
   const { supabase, denied } = await requireTagAdmin();
