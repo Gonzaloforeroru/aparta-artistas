@@ -783,3 +783,42 @@ export async function toggleAssociationActive(
   return { success: true };
 }
 
+/**
+ * Borra una asociación SOLO si no tiene artistas ligados.
+ *
+ * `artists.association_id` es ON DELETE SET NULL: un borrado a secas dejaría a
+ * esos artistas sin insignia en silencio y sin forma de saber a quién
+ * pertenecían. Se comprueba primero y se rechaza con mensaje legible.
+ */
+export async function deleteAssociation(
+  id: string,
+): Promise<AssociationActionResult> {
+  const { supabase, denied } = await requireAssociationAdmin();
+  if (denied) return { success: false, error: denied };
+
+  // Contar artistas ligados a esta asociación
+  const { count, error: countError } = await supabase
+    .from("artists")
+    .select("id", { count: "exact", head: true })
+    .eq("association_id", id);
+
+  if (countError) return { success: false, error: countError.message };
+
+  if (count && count > 0) {
+    const noun = count === 1 ? "artista ligado" : "artistas ligados";
+    return {
+      success: false,
+      error: `No se puede borrar: tiene ${count} ${noun}. Quítasela primero o desactívala.`,
+    };
+  }
+
+  const { error } = await supabase
+    .from("associations")
+    .delete()
+    .eq("id", id);
+
+  if (error) return { success: false, error: error.message };
+  revalidateAssociationPaths();
+  return { success: true };
+}
+

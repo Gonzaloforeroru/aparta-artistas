@@ -18,14 +18,14 @@ import {
   renameAssociation,
   updateAssociationPresentation,
   toggleAssociationActive,
+  deleteAssociation,
 } from "@/app/admin/actions";
 import type { Association } from "@/lib/queries/associations";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Add01Icon,
   PencilEdit01Icon,
-  Cancel01Icon,
-  Tick01Icon,
+  Delete02Icon,
 } from "@hugeicons/core-free-icons";
 
 /**
@@ -131,14 +131,21 @@ export function AsociacionesContent({ associations }: { associations: Associatio
   const [newShortName, setNewShortName] = useState("");
   const [newColor, setNewColor] = useState("");
 
+  // Estado del diálogo de edición
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editShortName, setEditShortName] = useState("");
   const [editColor, setEditColor] = useState("");
 
   const [toggleTarget, setToggleTarget] = useState<Association | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Association | null>(null);
 
   const [isPending, startTransition] = useTransition();
+
+  /* La asociación original que se está editando, para comparar qué cambió. */
+  const editingAssoc = editingId
+    ? associations.find((a) => a.id === editingId) ?? null
+    : null;
 
   function handleCreate() {
     startTransition(async () => {
@@ -166,11 +173,13 @@ export function AsociacionesContent({ associations }: { associations: Associatio
     setEditColor(assoc.color ?? "");
   }
 
-  function cancelEdit() {
+  function closeEdit() {
     setEditingId(null);
   }
 
-  function handleSaveEdit(assoc: Association) {
+  function handleSaveEdit() {
+    if (!editingAssoc) return;
+    const assoc = editingAssoc;
     startTransition(async () => {
       let hasError = false;
 
@@ -213,6 +222,20 @@ export function AsociacionesContent({ associations }: { associations: Associatio
         toast.error(result.error);
       }
       setToggleTarget(null);
+    });
+  }
+
+  function confirmDelete() {
+    if (!deleteTarget) return;
+    const assoc = deleteTarget;
+    startTransition(async () => {
+      const result = await deleteAssociation(assoc.id);
+      if (result.success) {
+        toast.success("Asociación borrada");
+      } else {
+        toast.error(result.error);
+      }
+      setDeleteTarget(null);
     });
   }
 
@@ -294,7 +317,7 @@ export function AsociacionesContent({ associations }: { associations: Associatio
         </div>
       )}
 
-      {/* ── Tabla ── */}
+      {/* ── Tabla (solo lectura + acciones) ── */}
       <div className="rounded-xl bg-card overflow-hidden">
         <Table>
           <TableHeader>
@@ -315,113 +338,115 @@ export function AsociacionesContent({ associations }: { associations: Associatio
                 </TableCell>
               </TableRow>
             ) : (
-              associations.map((assoc) =>
-                editingId === assoc.id ? (
-                  <TableRow key={assoc.id} className="bg-accent/30">
-                    <TableCell>
-                      <Input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="h-8 text-sm"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        value={editShortName}
-                        onChange={(e) => setEditShortName(e.target.value)}
-                        placeholder="Sigla"
-                        maxLength={12}
-                        className="h-8 w-[80px] font-mono text-xs"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <ColorPicker value={editColor} onChange={setEditColor} compact />
-                    </TableCell>
-                    <TableCell className="text-center tabular-nums text-sm text-muted-foreground">
-                      {assoc.artistCount}
-                    </TableCell>
-                    <TableCell>
-                      {assoc.active ? (
-                        <Badge variant="secondary" className="text-xs bg-[var(--success-bg)] text-[var(--success)]">Activa</Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">Inactiva</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-[var(--success)]"
-                          onClick={() => handleSaveEdit(assoc)}
-                          disabled={isPending}
-                          title="Guardar"
-                        >
-                          <HugeiconsIcon icon={Tick01Icon} className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={cancelEdit}
-                          disabled={isPending}
-                          title="Cancelar"
-                        >
-                          <HugeiconsIcon icon={Cancel01Icon} className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  <TableRow key={assoc.id} className={!assoc.active ? "opacity-50" : ""}>
-                    <TableCell className="font-medium">{assoc.name}</TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {assoc.shortName ?? <span className="text-muted-foreground/50">—</span>}
-                    </TableCell>
-                    <TableCell><ColorDot color={assoc.color} /></TableCell>
-                    <TableCell className="text-center tabular-nums text-sm text-muted-foreground">
-                      {assoc.artistCount}
-                    </TableCell>
-                    <TableCell>
-                      {assoc.active ? (
-                        <Badge variant="secondary" className="text-xs bg-[var(--success-bg)] text-[var(--success)]">Activa</Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">Inactiva</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => startEdit(assoc)}
-                          disabled={isPending}
-                          title="Editar"
-                        >
-                          <HugeiconsIcon icon={PencilEdit01Icon} className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className={assoc.active
-                            ? "text-muted-foreground hover:text-destructive"
-                            : "text-[var(--success)]"
-                          }
-                          onClick={() => setToggleTarget(assoc)}
-                          disabled={isPending}
-                        >
-                          {assoc.active ? "Desactivar" : "Activar"}
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ),
-              )
+              associations.map((assoc) => (
+                <TableRow key={assoc.id} className={!assoc.active ? "opacity-50" : ""}>
+                  <TableCell className="font-medium">{assoc.name}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {assoc.shortName ?? <span className="text-muted-foreground/50">—</span>}
+                  </TableCell>
+                  <TableCell><ColorDot color={assoc.color} /></TableCell>
+                  <TableCell className="text-center tabular-nums text-sm text-muted-foreground">
+                    {assoc.artistCount}
+                  </TableCell>
+                  <TableCell>
+                    {assoc.active ? (
+                      <Badge variant="secondary" className="text-xs bg-[var(--success-bg)] text-[var(--success)]">Activa</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">Inactiva</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => startEdit(assoc)}
+                        disabled={isPending}
+                        title="Editar"
+                      >
+                        <HugeiconsIcon icon={PencilEdit01Icon} className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => setDeleteTarget(assoc)}
+                        disabled={isPending}
+                        title="Borrar"
+                      >
+                        <HugeiconsIcon icon={Delete02Icon} className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={assoc.active
+                          ? "text-muted-foreground hover:text-destructive"
+                          : "text-[var(--success)]"
+                        }
+                        onClick={() => setToggleTarget(assoc)}
+                        disabled={isPending}
+                      >
+                        {assoc.active ? "Desactivar" : "Activar"}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
       </div>
+
+      {/* ── Diálogo de edición ── */}
+      <AlertDialog
+        open={editingId !== null}
+        onOpenChange={(open) => { if (!open) closeEdit(); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Editar asociación</AlertDialogTitle>
+            <AlertDialogDescription>
+              Modifica los datos de &ldquo;{editingAssoc?.name}&rdquo;.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs text-muted-foreground">Nombre</Label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Nombre de la asociación"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs text-muted-foreground">Sigla (opcional, máx 12)</Label>
+              <Input
+                value={editShortName}
+                onChange={(e) => setEditShortName(e.target.value)}
+                placeholder="Ej: CUC"
+                maxLength={12}
+                className="w-[140px] font-mono text-xs"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs text-muted-foreground">Color de la insignia</Label>
+              <ColorPicker value={editColor} onChange={setEditColor} />
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSaveEdit}
+              disabled={isPending || !editName.trim()}
+            >
+              Guardar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ── Diálogo de confirmación activar/desactivar ── */}
       <AlertDialog
@@ -447,6 +472,43 @@ export function AsociacionesContent({ associations }: { associations: Associatio
               disabled={isPending}
             >
               {toggleTarget?.active ? "Desactivar" : "Activar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Diálogo de confirmación de borrado ── */}
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Borrar asociación?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vas a borrar &ldquo;{deleteTarget?.name}&rdquo; de forma
+              permanente. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+            {deleteTarget && deleteTarget.artistCount > 0 && (
+              <p className="text-xs text-amber-500">
+                Tiene {deleteTarget.artistCount}{" "}
+                {deleteTarget.artistCount === 1 ? "artista ligado" : "artistas ligados"}.
+                El servidor rechazará el borrado; quítales la asociación primero o desactívala.
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Si solo quieres dejar de usarla, puedes <strong>desactivarla</strong> en
+              vez de borrarla: los artistas la conservan y puedes reactivarla después.
+            </p>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={isPending}
+            >
+              Borrar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
