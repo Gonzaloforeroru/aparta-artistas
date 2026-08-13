@@ -58,11 +58,20 @@ function StatusBadge({ status }: { status: "pendiente" | "agotado" | "expirado" 
   );
 }
 
+/**
+ * Incluye la hora a proposito.
+ *
+ * Sin ella, una invitacion creada esta madrugada y ya caducada se mostraba como
+ * "Expirada · 13 de ago" el mismo 13 de agosto, y parecia un fallo del estado.
+ * La caducidad es un instante, no un dia.
+ */
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("es-CO", {
+  return new Date(iso).toLocaleString("es-CO", {
     day: "numeric",
     month: "short",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
