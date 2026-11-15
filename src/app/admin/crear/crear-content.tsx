@@ -219,13 +219,12 @@ export function CrearContent({ existingArtist, associations, typeOptions, genreO
                     )}
                   </div>
                   <div className="flex flex-col gap-2">
-                    <Label>Género Musical <span className="text-destructive">*</span></Label>
+                    <Label>Género Musical <span className="font-normal text-muted-foreground">(opcional)</span></Label>
                     <SearchableSelect
                       value={selectedGenre}
                       onValueChange={setSelectedGenre}
                       options={genreSelectOptions}
                       placeholder="Seleccionar género"
-                      required
                     />
                   </div>
                   <div className="flex flex-col gap-2">
