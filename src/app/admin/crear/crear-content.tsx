@@ -25,6 +25,9 @@ import Link from "next/link";
 
 type Artist = Tables<"artists">;
 
+// Valor centinela para la opción "Otro" del campo Profesión.
+const OTHER_PROFESSION = "__otro__";
+
 interface CrearContentProps {
   existingArtist: Artist | null;
   associations: Association[];
@@ -40,7 +43,18 @@ export function CrearContent({ existingArtist, associations, typeOptions, genreO
   const [associationId, setAssociationId] = useState<string>(
     existingArtist?.association_id ?? "none",
   );
-  const [selectedType, setSelectedType] = useState(existingArtist?.type ?? "");
+  // Si la profesión guardada no está en el catálogo de tags oficiales, se trata
+  // como una profesión personalizada ("Otro") y se precarga en el campo de texto.
+  const typeNames = typeOptions.map((t) => t.name);
+  const existingType = existingArtist?.type ?? "";
+  const existingTypeIsCustom =
+    existingType !== "" && !typeNames.includes(existingType);
+  const [selectedType, setSelectedType] = useState(
+    existingTypeIsCustom ? OTHER_PROFESSION : existingType,
+  );
+  const [customType, setCustomType] = useState(
+    existingTypeIsCustom ? existingType : "",
+  );
   const [selectedGenre, setSelectedGenre] = useState(existingArtist?.genre ?? "");
   const isEditing = !!existingArtist;
   const activeAssociations = associations.filter((a) => a.active);
@@ -60,7 +74,13 @@ export function CrearContent({ existingArtist, associations, typeOptions, genreO
       formData.set("deletePhoto", "true");
     }
     formData.set("association_id", associationId);
-    formData.set("type", selectedType);
+    const finalType =
+      selectedType === OTHER_PROFESSION ? customType.trim() : selectedType;
+    if (selectedType === OTHER_PROFESSION && !finalType) {
+      toast.error("Escribe la profesión");
+      return;
+    }
+    formData.set("type", finalType);
     formData.set("genre", selectedGenre);
     startTransition(async () => {
       try {
@@ -176,14 +196,27 @@ export function CrearContent({ existingArtist, associations, typeOptions, genreO
                       required
                     >
                       <SelectTrigger>
-                        <SelectValue>{selectedType || "Seleccionar"}</SelectValue>
+                        <SelectValue>
+                          {selectedType === OTHER_PROFESSION
+                            ? "Otro"
+                            : selectedType || "Seleccionar"}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {typeOptions.map((t) => (
                           <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
                         ))}
+                        <SelectItem value={OTHER_PROFESSION}>Otro…</SelectItem>
                       </SelectContent>
                     </Select>
+                    {selectedType === OTHER_PROFESSION && (
+                      <Input
+                        placeholder="Escribe la profesión"
+                        value={customType}
+                        onChange={(e) => setCustomType(e.target.value)}
+                        autoFocus
+                      />
+                    )}
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label>Género Musical <span className="text-destructive">*</span></Label>
