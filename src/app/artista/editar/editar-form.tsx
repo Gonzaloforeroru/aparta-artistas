@@ -161,6 +161,7 @@ export function EditarForm({
                   <TagPicker
                     kind="genre"
                     label="Géneros"
+                    required={false}
                     options={tagOptions.genre}
                     initialSelected={artistTags.filter(
                       (t) => t.kind === "genre",
