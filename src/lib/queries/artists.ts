@@ -2,17 +2,42 @@ import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/lib/supabase/database.types";
 import type { TagKind } from "@/lib/queries/tags";
 
+/**
+ * Trae TODAS las filas de una consulta, superando el tope de 1000 filas por
+ * petición de la API de Supabase (PostgREST). `page` recibe un rango [from, to]
+ * y debe devolver la consulta con `.range(from, to)` aplicado; se itera hasta
+ * que una página vuelve incompleta.
+ */
+const PAGE_SIZE = 1000;
+
+async function fetchAllRows<T>(
+  page: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: T[] | null; error: unknown }>,
+): Promise<T[]> {
+  const all: T[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await page(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    const rows = data ?? [];
+    all.push(...rows);
+    if (rows.length < PAGE_SIZE) break;
+  }
+  return all;
+}
+
 export async function getApprovedArtists() {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("artists")
-    .select("*")
-    .eq("status", "Aprobado")
-    .eq("active", true)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data;
+  return fetchAllRows((from, to) =>
+    supabase
+      .from("artists")
+      .select("*")
+      .eq("status", "Aprobado")
+      .eq("active", true)
+      .order("created_at", { ascending: false })
+      .range(from, to),
+  );
 }
 
 /**
@@ -65,18 +90,19 @@ export type ArtistWithTags = Tables<"artists"> & {
 
 export async function getApprovedArtistsWithTags(): Promise<ArtistWithTags[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("artists")
-    .select(
-      "*, municipality:municipalities(code, name, department_code), association:associations(id, name, short_name, color), artist_tags(status, tags(id, kind, name, slug, color))",
-    )
-    .eq("status", "Aprobado")
-    .eq("active", true)
-    .order("created_at", { ascending: false });
+  const data = await fetchAllRows((from, to) =>
+    supabase
+      .from("artists")
+      .select(
+        "*, municipality:municipalities(code, name, department_code), association:associations(id, name, short_name, color), artist_tags(status, tags(id, kind, name, slug, color))",
+      )
+      .eq("status", "Aprobado")
+      .eq("active", true)
+      .order("created_at", { ascending: false })
+      .range(from, to),
+  );
 
-  if (error) throw error;
-
-  const rows = (data ?? []) as unknown as ArtistRowWithRelations[];
+  const rows = data as unknown as ArtistRowWithRelations[];
 
   /**
    * `gender` es privado: el artista lo declara para estadisticas, no para que
@@ -99,25 +125,25 @@ export async function getApprovedArtistsWithTags(): Promise<ArtistWithTags[]> {
 
 export async function getAllArtists() {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("artists")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data;
+  return fetchAllRows((from, to) =>
+    supabase
+      .from("artists")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(from, to),
+  );
 }
 
 export async function getPendingArtists() {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("artists")
-    .select("*")
-    .eq("status", "Pendiente")
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data;
+  return fetchAllRows((from, to) =>
+    supabase
+      .from("artists")
+      .select("*")
+      .eq("status", "Pendiente")
+      .order("created_at", { ascending: false })
+      .range(from, to),
+  );
 }
 
 export async function getArtistById(id: string) {
@@ -134,11 +160,9 @@ export async function getArtistById(id: string) {
 
 export async function getArtistStats() {
   const supabase = await createClient();
-  const { data: artists, error } = await supabase
-    .from("artists")
-    .select("*");
-
-  if (error) throw error;
+  const artists = await fetchAllRows((from, to) =>
+    supabase.from("artists").select("*").range(from, to),
+  );
 
   const total = artists.length;
   const active = artists.filter((a) => a.active).length;
