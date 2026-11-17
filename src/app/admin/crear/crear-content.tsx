@@ -84,14 +84,19 @@ export function CrearContent({ existingArtist, associations, typeOptions, genreO
     formData.set("genre", selectedGenre);
     startTransition(async () => {
       try {
-        if (isEditing) {
-          await updateArtist(existingArtist.id, formData);
-          toast.success("Artista actualizado exitosamente");
+        const result = isEditing
+          ? await updateArtist(existingArtist.id, formData)
+          : await createArtist(formData);
+        if (result.success) {
+          toast.success(
+            isEditing
+              ? "Artista actualizado exitosamente"
+              : "Artista creado exitosamente",
+          );
+          router.push("/admin/lista");
         } else {
-          await createArtist(formData);
-          toast.success("Artista creado exitosamente");
+          toast.error(result.error);
         }
-        router.push("/admin/lista");
       } catch {
         toast.error("Error al guardar artista");
       }
