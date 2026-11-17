@@ -88,9 +88,63 @@ async function syncAdminArtistTags(
   }
 }
 
-export async function createArtist(formData: FormData) {
+export type ArtistActionResult =
+  | { success: true }
+  | { success: false; error: string };
+
+/**
+ * Verifica, con la sesión real del usuario, que quien llama es administrador y
+ * devuelve un cliente de servicio (sin RLS) para hacer la escritura.
+ *
+ * El alta y la edición están protegidas por RLS (admin_insert_artists /
+ * admin_update_artists), que exigen auth.uid() con rol admin. En un Server
+ * Action, si el token de acceso caducó, la cookie refrescada no siempre se
+ * puede reescribir, así que la llamada a PostgREST viaja sin identidad y RLS la
+ * rechaza con 42501 — el usuario solo veía "Error al guardar artista".
+ *
+ * getUser() refresca en memoria y es fiable aunque la cookie no se persista; el
+ * rol se comprueba con el cliente de servicio. Si es admin, la escritura se hace
+ * con ese cliente de servicio, de modo que un token caducado ya no la tumba.
+ */
+async function requireArtistAdmin(): Promise<
+  | { ok: true; db: ReturnType<typeof createAdminClient>; userId: string }
+  | { ok: false; error: string }
+> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user)
+    return {
+      ok: false,
+      error:
+        "Tu sesión de administrador expiró. Vuelve a iniciar sesión e inténtalo de nuevo.",
+    };
+
+  const db = createAdminClient();
+  const { data: profile } = await db
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "admin")
+    return {
+      ok: false,
+      error:
+        "No tienes permisos de administrador. Vuelve a iniciar sesión e inténtalo de nuevo.",
+    };
+
+  return { ok: true, db, userId: user.id };
+}
+
+export async function createArtist(
+  formData: FormData,
+): Promise<ArtistActionResult> {
+  const auth = await requireArtistAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+  const { db, userId } = auth;
 
   // Handle photo upload
   const photoFile = formData.get("photo") as File | null;
@@ -101,7 +155,7 @@ export async function createArtist(formData: FormData) {
   const assocIdCreate =
     rawAssocCreate && rawAssocCreate !== "none" ? rawAssocCreate : null;
 
-   const { data: artistData, error } = await supabase
+   const { data: artistData, error } = await db
      .from("artists")
      .insert({
        name: formData.get("name") as string,
@@ -119,42 +173,59 @@ export async function createArtist(formData: FormData) {
        spotify: (formData.get("spotify") as string) || null,
        website: (formData.get("website") as string) || null,
        association_id: assocIdCreate,
-       created_by: user?.id,
+       created_by: userId,
      })
      .select()
      .single();
 
-  if (error) throw error;
+  if (error) {
+    if (error.code === "23505")
+      return { success: false, error: "Ya existe un artista con ese correo." };
+    return {
+      success: false,
+      error: "No se pudo guardar el artista. Inténtalo de nuevo.",
+    };
+  }
 
   // Sincronizar artist_tags de tipo y género
   await syncAdminArtistTags(
-    supabase,
+    db,
     artistData.id,
     formData.get("type") as string | null,
     formData.get("genre") as string | null,
     false,
   );
 
-  // Upload photo if provided
+  // Upload photo if provided (best-effort: el artista ya quedó creado)
   if (photoFile && photoFile.size > 0) {
-    const uploadedUrl = await uploadArtistPhoto(photoFile, artistData.id);
-    if (uploadedUrl) {
-      await supabase
-        .from("artists")
-        .update({ photo: uploadedUrl })
-        .eq("id", artistData.id);
+    try {
+      const uploadedUrl = await uploadArtistPhoto(photoFile, artistData.id);
+      if (uploadedUrl) {
+        await db
+          .from("artists")
+          .update({ photo: uploadedUrl })
+          .eq("id", artistData.id);
+      }
+    } catch {
+      // Si la foto falla, el alta no se revierte; se reintenta al editar.
     }
   }
 
   revalidatePath("/admin/lista");
   revalidatePath("/catalogo");
+  return { success: true };
 }
 
-export async function updateArtist(id: string, formData: FormData) {
-  const supabase = await createClient();
+export async function updateArtist(
+  id: string,
+  formData: FormData,
+): Promise<ArtistActionResult> {
+  const auth = await requireArtistAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+  const { db } = auth;
 
   // Get current artist to preserve existing photo
-  const { data: currentArtist } = await supabase
+  const { data: currentArtist } = await db
     .from("artists")
     .select("photo")
     .eq("id", id)
@@ -187,7 +258,7 @@ export async function updateArtist(id: string, formData: FormData) {
   const associationId =
     rawAssociation && rawAssociation !== "none" ? rawAssociation : null;
 
-   const { error } = await supabase
+   const { error } = await db
      .from("artists")
      .update({
        name: formData.get("name") as string,
@@ -209,11 +280,18 @@ export async function updateArtist(id: string, formData: FormData) {
      })
            .eq("id", id);
 
-  if (error) throw error;
+  if (error) {
+    if (error.code === "23505")
+      return { success: false, error: "Ya existe un artista con ese correo." };
+    return {
+      success: false,
+      error: "No se pudo guardar el artista. Inténtalo de nuevo.",
+    };
+  }
 
   // Sincronizar artist_tags de tipo y género
   await syncAdminArtistTags(
-    supabase,
+    db,
     id,
     formData.get("type") as string | null,
     formData.get("genre") as string | null,
@@ -222,6 +300,7 @@ export async function updateArtist(id: string, formData: FormData) {
 
   revalidatePath("/admin/lista");
   revalidatePath("/catalogo");
+  return { success: true };
 }
 
 export async function removeArtistPhoto(id: string) {
