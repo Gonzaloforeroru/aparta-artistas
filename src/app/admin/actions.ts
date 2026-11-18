@@ -975,11 +975,12 @@ export async function toggleAssociationActive(
 }
 
 /**
- * Borra una asociación SOLO si no tiene artistas ligados.
+ * Borra una asociación, aunque tenga artistas ligados.
  *
- * `artists.association_id` es ON DELETE SET NULL: un borrado a secas dejaría a
- * esos artistas sin insignia en silencio y sin forma de saber a quién
- * pertenecían. Se comprueba primero y se rechaza con mensaje legible.
+ * La FK artists_association_id_fkey es ON DELETE RESTRICT, así que la base
+ * rechazaría un borrado directo. Por eso primero se les quita la asociación a
+ * los artistas (quedan sin insignia; NO se borran) y luego se elimina. Las
+ * invitaciones se desligan solas (su FK es ON DELETE SET NULL).
  */
 export async function deleteAssociation(
   id: string,
@@ -987,21 +988,14 @@ export async function deleteAssociation(
   const { supabase, denied } = await requireAssociationAdmin();
   if (denied) return { success: false, error: denied };
 
-  // Contar artistas ligados a esta asociación
-  const { count, error: countError } = await supabase
+  // Desligar a los artistas de esta asociación (no se borran, solo pierden la
+  // insignia). Es obligatorio por el ON DELETE RESTRICT de la FK.
+  const { error: unlinkError } = await supabase
     .from("artists")
-    .select("id", { count: "exact", head: true })
+    .update({ association_id: null })
     .eq("association_id", id);
 
-  if (countError) return { success: false, error: countError.message };
-
-  if (count && count > 0) {
-    const noun = count === 1 ? "artista ligado" : "artistas ligados";
-    return {
-      success: false,
-      error: `No se puede borrar: tiene ${count} ${noun}. Quítasela primero o desactívala.`,
-    };
-  }
+  if (unlinkError) return { success: false, error: unlinkError.message };
 
   const { error } = await supabase
     .from("associations")
@@ -1010,6 +1004,7 @@ export async function deleteAssociation(
 
   if (error) return { success: false, error: error.message };
   revalidateAssociationPaths();
+  revalidatePath("/admin/lista");
   return { success: true };
 }
 

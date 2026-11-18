@@ -492,8 +492,9 @@ export function AsociacionesContent({ associations }: { associations: Associatio
             {deleteTarget && deleteTarget.artistCount > 0 && (
               <p className="text-xs text-amber-500">
                 Tiene {deleteTarget.artistCount}{" "}
-                {deleteTarget.artistCount === 1 ? "artista ligado" : "artistas ligados"}.
-                El servidor rechazará el borrado; quítales la asociación primero o desactívala.
+                {deleteTarget.artistCount === 1 ? "artista ligado" : "artistas ligados"}:
+                al borrarla {deleteTarget.artistCount === 1 ? "quedará" : "quedarán"} sin
+                insignia (no se {deleteTarget.artistCount === 1 ? "borra" : "borran"}).
               </p>
             )}
             <p className="text-xs text-muted-foreground">
